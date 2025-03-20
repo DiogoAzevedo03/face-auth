@@ -1,1 +1,5 @@
-# Face Auth
+# Face Auth 
+
+ - author branches:
+   - diogo
+   - leticia
