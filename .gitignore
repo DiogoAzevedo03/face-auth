@@ -1,0 +1,67 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribuição e empacotamento
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs de instalador
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Relatórios de testes e cobertura
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Arquivos gerados pelo PyInstaller
+*.manifest
+*.spec
+
+# Arquivos de ambiente
+.env
+
+# Pastas de configurações de IDEs
+.idea/
+.vscode/
+
+# Cache do mypy
+.mypy_cache/
+
+# Arquivos temporários
+*.tmp
+*.bak
+
+# Arquivos de sistema (úteis se você trabalhar também em Mac ou Windows)
+.DS_Store
+Thumbs.db
