@@ -1,27 +1,28 @@
 """
-Teste de Funcionamento da Câmara com Picamera2
+Camera Functionality Test with Picamera2
 
-Autor: Diogo Azevedo
-Data: 2025-03-20
-Descrição:
-Este script testa se a câmara está funcional utilizando a biblioteca Picamera2.
-Abre uma janela com a imagem captada em tempo real durante 60 segundos.
+Author: Diogo Azevedo & Leticia Loureiro
+Date: 2025-03-20
+Description:
+This script tests whether the camera is working using the Picamera2 library.
+It opens a window with a real-time image for 60 seconds.
 """
 
-from picamera2 import Picamera2, Preview  # Importa a classe da câmara e o tipo de visualização
-from time import sleep  # Importa função para pausar a execução
+from picamera2 import Picamera2, Preview  # Import the camera class and preview type
+from time import sleep  # Import function to pause execution
 
-# Inicializa a câmara
+# Initialize the camera
 picam2 = Picamera2()
 
-# Inicia a pré-visualização com interface gráfica (QT)
+# Start the preview with graphical interface (QT)
 picam2.start_preview(Preview.QTGL)
 
-# Inicia a captura da câmara
+# Start the camera capture
 picam2.start()
 
-# Aguarda 60 segundos enquanto a câmara está ativa
+# Wait 60 seconds while the camera is active
 sleep(60)
 
-# Fecha a câmara e termina a visualização
+# Close the camera and stop the preview
 picam2.close()
+
