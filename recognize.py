@@ -45,22 +45,37 @@ def get_embedding(image):
     return embedding
 
 def load_known_embeddings():
-    """Carrega todos os embeddings guardados"""
+    """Loads all saved embeddings and groups them by user"""
     known = {}
     for file in os.listdir(EMBEDDINGS_DIR):
         if file.endswith(".pkl"):
+            name = file.split("_")[0]  # Pega só o nome antes do "_"
             path = os.path.join(EMBEDDINGS_DIR, file)
             with open(path, "rb") as f:
-                known[file.replace(".pkl", "")] = pickle.load(f)
+                embedding = pickle.load(f)
+                if name not in known:
+                    known[name] = []
+                known[name].append(embedding)
     return known
 
+
 def recognize_face(embedding, known_embeddings):
-    """Compara embedding com os existentes e retorna o nome (ou desconhecido)"""
-    for name, known_emb in known_embeddings.items():
-        distance = np.linalg.norm(embedding - known_emb)
-        if distance < THRESHOLD:
-            return name, distance
-    return "Desconhecido", None
+    """Compara embedding com todos os conhecidos e retorna o melhor matching"""
+    best_match = "Desconhecido"
+    best_distance = float('inf')
+
+    for name, embeddings in known_embeddings.items():
+        for known_emb in embeddings:
+            distance = np.linalg.norm(embedding - known_emb)
+            if distance < best_distance:
+                best_distance = distance
+                best_match = name
+
+    if best_distance < THRESHOLD:
+        return best_match, best_distance
+    else:
+        return "Desconhecido", None
+
 
 def main():
     print("🎥 A iniciar reconhecimento facial em tempo real...")
