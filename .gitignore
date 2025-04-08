@@ -65,3 +65,6 @@ coverage.xml
 # Arquivos de sistema (úteis se você trabalhar também em Mac ou Windows)
 .DS_Store
 Thumbs.db
+
+
+embeddings/*.pkl
