@@ -35,10 +35,12 @@ output_details = interpreter.get_output_details()
 def preprocess_image(image):
     """Preprocess the face image: resize and normalize."""
     if image.shape[2] == 4:
-        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)  # Convert images with 4 channels (RGBA)
     resized = cv2.resize(image, (112, 112))
     normalized = resized.astype('float32') / 255.0
+    # Add batch dimension (1, 112, 112, 3)
     return np.expand_dims(normalized, axis=0)
+
 
 def get_embedding(image):
     """Extract face embedding from preprocessed image."""
@@ -133,3 +135,4 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\n🛑 Recognition stopped by user.")
+        
