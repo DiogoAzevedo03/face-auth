@@ -17,12 +17,12 @@ from picamera2 import Picamera2
 import time
 import shutil
 import tflite_runtime.interpreter as tflite
+import mediapipe as mp
+
 
 # === CONFIGURATION ===
 MODEL_PATH = "models/mobilefacenet.tflite"
-CASCADE_PATH = "cascades/haarcascade_frontalface_default.xml"
 SAVE_BASE_PATH = "embeddings/"
-NUM_EMBEDDINGS = 60
 CAPTURE_INTERVAL = 1  # seconds
 
 os.makedirs(SAVE_BASE_PATH, exist_ok=True)
@@ -33,7 +33,10 @@ interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
+# Inicializar MediaPipe Face Detection
+mp_face_detection = mp.solutions.face_detection
+face_detection = mp_face_detection.FaceDetection(model_selection=0,min_detection_confidence=0.5)
+
 
 # === HELPER FUNCTIONS ===
 
@@ -56,7 +59,7 @@ def get_embedding(face_img):
 # === MAIN FUNCTION ===
 
 def main():
-    print("🚀 Starting automatic face embedding generator...")
+    print("Starting automatic face embedding generator...")
 
     # Initialize camera
     picam2 = Picamera2()
@@ -70,32 +73,46 @@ def main():
     if os.path.exists(user_dir):
         choice = input(f"User '{username}' already exists. [W]ipe or [A]ppend? ").strip().lower()
         if choice == "w":
-            print("🧹 Wiping existing embeddings...")
+            print("Wiping existing embeddings...")
             shutil.rmtree(user_dir)
             os.makedirs(user_dir)
             counter = 0
         else:
-            print("➕ Appending to existing embeddings...")
+            print("Appending to existing embeddings...")
             existing_files = [f for f in os.listdir(user_dir) if f.endswith(".pkl")]
             counter = len(existing_files)
     else:
         os.makedirs(user_dir)
         counter = 0
 
-    # 👇 Novo: perguntar quantos novos embeddings quer gerar
+    # Novo: perguntar quantos novos embeddings quer gerar
     num_to_generate = int(input("How many new embeddings do you want to capture? "))
 
     last_capture_time = 0
 
-    print("📸 Get ready! The system will start capturing automatically...")
+    print("Get ready! The system will start capturing automatically...")
 
     end_counter = counter + num_to_generate  # Nova meta
 
     while counter < end_counter:
         frame = picam2.capture_array()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+        # Detect faces with MediaPipe
+        results = face_detection.process(rgb_frame)
+
+        faces = []
+
+        if results.detections:
+            for detection in results.detections:
+                bboxC = detection.location_data.relative_bounding_box
+                ih, iw, _ = frame.shape
+                x = int(bboxC.xmin * iw)
+                y = int(bboxC.ymin * ih)
+                w = int(bboxC.width * iw)
+                h = int(bboxC.height * ih)
+                faces.append((x, y, w, h))
+
 
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
@@ -107,7 +124,19 @@ def main():
 
         if len(faces) > 0 and time.time() - last_capture_time > CAPTURE_INTERVAL:
             (x, y, w, h) = faces[0]
+            # Proteger limites da imagem
+            ih, iw, _ = frame.shape
+            x = max(0, x)
+            y = max(0, y)
+            w = min(w, iw - x)
+            h = min(h, ih - y)
+
             face_crop = frame[y:y+h, x:x+w]
+
+            if face_crop.size == 0:
+                print("Invalid face crop detected, skipping...")
+                continue
+
             embedding = get_embedding(face_crop)
 
             filename = os.path.join(user_dir, f"{username}_{counter:02d}.pkl")
@@ -119,10 +148,10 @@ def main():
             last_capture_time = time.time()
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            print("🛑 User requested exit.")
+            print("User requested exit.")
             break
 
-    print("🎯 Finished capturing embeddings!")
+    print("Finished capturing embeddings!")
     cv2.destroyAllWindows()
     picam2.close()
 
@@ -133,5 +162,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n🛑 Program interrupted by user.")
+        print("\nProgram interrupted by user.")
         cv2.destroyAllWindows()

@@ -13,15 +13,13 @@ import pickle
 from picamera2 import Picamera2
 from time import sleep
 import tflite_runtime.interpreter as tflite
+import mediapipe as mp  # Import mediapipe
+
 
 # === Configuration ===
 
 EMBEDDINGS_DIR = "embeddings/"
 THRESHOLD = 0.8  # Lowered for better precision
-CASCADE_PATH = "cascades/haarcascade_frontalface_default.xml"  # Path to Haar Cascade
-
-# Load Haar Cascade for face detection
-face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
 
 # Load TFLite face embedding model
 interpreter = tflite.Interpreter(model_path="models/mobilefacenet.tflite")
@@ -29,6 +27,10 @@ interpreter.allocate_tensors()
 
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
+
+# Initialize MediaPipe Face Detection
+mp_face_detection = mp.solutions.face_detection
+face_detection = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
 
 # === Helper Functions ===
 
@@ -87,7 +89,7 @@ def recognize_face(embedding, known_embeddings):
 # === Main ===
 
 def main():
-    print("🎥 Starting real-time face detection and recognition...")
+    print("Starting real-time face detection and recognition...")
 
     # Initialize camera
     picam2 = Picamera2()
@@ -98,17 +100,39 @@ def main():
 
     while True:
         frame = picam2.capture_array()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Detect faces
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60))
+        # Detect faces with MediaPipe
+        results = face_detection.process(rgb_frame)
+
+        faces = []
+
+        if results.detections:
+            for detection in results.detections:
+                bboxC = detection.location_data.relative_bounding_box
+                ih, iw, _ = frame.shape
+                x = int(bboxC.xmin * iw)
+                y = int(bboxC.ymin * ih)
+                w = int(bboxC.width * iw)
+                h = int(bboxC.height * ih)
+                faces.append((x, y, w, h))
 
         for (x, y, w, h) in faces:
-            # Extract the face ROI
-            face = frame[y:y+h, x:x+w]
+            # Protect against out-of-bounds
+            ih, iw, _ = frame.shape
+            x = max(0, x)
+            y = max(0, y)
+            w = min(w, iw - x)
+            h = min(h, ih - y)
+
+            face_crop = frame[y:y+h, x:x+w]
+
+            if face_crop.size == 0:
+                print("Invalid face crop detected, skipping...")
+                continue
 
             # Recognize the face
-            face_embedding = get_embedding(face)
+            face_embedding = get_embedding(face_crop)
             name, dist = recognize_face(face_embedding, known_embeddings)
 
             # Draw rectangle around face
@@ -134,5 +158,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n🛑 Recognition stopped by user.")
+        print("\nRecognition stopped by user.")
         

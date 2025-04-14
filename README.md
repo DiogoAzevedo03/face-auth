@@ -3,24 +3,91 @@
  - author branches:
    - diogo
    - leticia 
-   
-## Overview
-This project is part of the FaceAuth system, which aims to provide facial recognition authentication. The primary function of this component is to capture a face using the Raspberry Pi camera (via Picamera2) and generate a 128-dimensional embedding using a pre-trained MobileFaceNet model in TensorFlow Lite format. These embeddings serve as unique representations of faces and are used later for comparing and recognizing users.
 
-## How to Run
-1. Ensure that the camera is connected and the Raspberry Pi is running the desktop environment.
-2. Install the required dependencies by running:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3. Execute the embedding generator script:
-    ```bash
-    python3 generate_face_embedding.py
-    ```
-   The script will display a live camera feed. Press 's' to capture the frame, then enter the username. The corresponding face embedding will be saved as a `.pkl` file in the `embeddings/` directory.
+---
 
-## Why is it needed?
-The generated face embeddings are a key component of the FaceAuth system. They allow the system to uniquely represent each user's face as a numerical vector. These embeddings are used to perform face comparisons and recognition, enabling secure and efficient authentication.
+ **Overview**  
+This project is part of the FaceAuth system, developed to provide facial recognition authentication on a Raspberry Pi 5.  
+It consists of two main scripts:
 
-## Requirements
-The project relies on several Python libraries, which are listed in the `requirements.txt` file.
+- **generate_multiple_embeddings.py**:  
+  Captures faces from the camera, generates embeddings using a MobileFaceNet model (TensorFlow Lite), and saves them for future recognition.
+
+- **recognize.py**:  
+  Detects faces in real time and identifies users by comparing live embeddings with the stored ones.
+
+Face detection is performed using **MediaPipe** for improved precision and performance.
+
+---
+
+ **How to Run**
+
+### 1. Install Required Dependencies
+
+Make sure your Raspberry Pi camera is properly connected and configured.
+
+Then, install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Generate Face Embeddings
+To capture embeddings for a new user:
+
+```bash
+python3 generate_multiple_embeddings.py
+```
+Follow the instructions in the terminal:
+
+Enter a username.
+
+Choose whether to wipe or append embeddings if the user already exists.
+
+Specify how many embeddings you want to capture.
+
+The system will automatically detect your face and save embeddings to the embeddings/ folder.
+
+### 3. Recognize Faces in Real Time
+To start real-time face recognition:
+
+```bash
+python3 recognize.py
+```
+The system will detect faces live:
+
+Recognized users will have their names displayed on the screen.
+
+Unknown faces will be labeled as "Unknown".
+
+Press 'q' at any time to exit.
+
+---
+
+ **Technologies Used**
+
+- **TensorFlow Lite** – for generating 128-dimensional face embeddings (using MobileFaceNet model).
+- **MediaPipe** – for accurate and fast face detection.
+- **OpenCV** – for image processing and visualization.
+- **Picamera2** – for interfacing with the Raspberry Pi Camera.
+- **Python 3.11** – development language.
+
+
+---
+
+ File Structure
+
+|File	                            |Description |
+|-----------------------------------|------------|
+|generate_multiple_embeddings.py	|Captures faces and generates embeddings, saving them per user.|
+|recognize.py	                    |Recognizes faces in real time by comparing live embeddings with stored ones.|
+|requirements.txt	                |Lists all required Python packages.|
+|models/mobilefacenet.tflite	    |Pre-trained MobileFaceNet model used for embedding generation.|
+|embeddings/	                    |Directory where all user embeddings are stored.|
+|README.md	                        |This documentation file.|
+
+---
+
+ Why Embeddings Are Needed
+Face embeddings are compact numerical representations of faces.
+They allow the system to compare and recognize users efficiently without storing raw images, improving speed, security, and privacy.
