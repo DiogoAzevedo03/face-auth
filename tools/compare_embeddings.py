@@ -5,6 +5,8 @@
 # Description:
 # Compares two .pkl embeddings (NumPy arrays)
 # and calculates Euclidean distance.
+# Note: This script is an auxiliary tool for manual testing.
+# It is not used during real-time recognition, but helps verify the distance between two face embeddings.
 # ============================================
 
 import pickle
@@ -20,10 +22,10 @@ def load_embedding(file_path):
         embedding = pickle.load(f)
 
     if not isinstance(embedding, np.ndarray):
-        raise ValueError("❌ Invalid embedding type: expected numpy.ndarray")
+        raise ValueError("Invalid embedding type: expected numpy.ndarray")
     
     if len(embedding) != 192:
-        raise ValueError(f"❌ Invalid embedding length: expected 192, got {len(embedding)}")
+        raise ValueError(f"Invalid embedding length: expected 192, got {len(embedding)}")
 
     return embedding
 
@@ -37,15 +39,15 @@ try:
 
     # === DISTANCE ===
     distance = np.linalg.norm(emb1 - emb2)
-    print(f"\n🔍 Distance between embeddings: {distance:.4f}")
+    print(f"\nDistance between embeddings: {distance:.4f}")
 
     # === INTERPRETATION ===
     if distance < 0.8:
-        print("✅ Same person (high similarity)")
+        print("Same person (high similarity)")
     elif distance < 1.3:
-        print("🟡 Possibly the same person (medium similarity)")
+        print("Possibly the same person (medium similarity)")
     else:
-        print("❌ Different person or bad capture (low similarity)")
+        print("Different person or bad capture (low similarity)")
 
 
 except Exception as e:
