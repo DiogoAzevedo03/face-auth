@@ -143,7 +143,7 @@ def main():
             with open(filename, "wb") as f:
                 pickle.dump(embedding, f)
 
-            print(f"✅ Saved embedding: {filename}")
+            print(f"Saved embedding: {filename}")
             counter += 1
             last_capture_time = time.time()
 
