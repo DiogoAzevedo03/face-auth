@@ -1,0 +1,46 @@
+<!-- ============================================
+ FaceAuth Landing Page
+ File: index.html
+ Authors: Diogo Azevedo and Letícia Loureiro
+ Date: 2025-04-23
+
+ Description:
+ This is the initial landing page for the FaceAuth system.
+ It welcomes the user and allows them to initiate facial login.
+
+ Technologies:
+ - HTML and CSS
+ - Flask with Jinja2 for rendering dynamic links
+ ============================================ -->
+
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+   <!-- Set character encoding and responsive viewport -->
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ 
+   <!-- Page title -->
+   <title>FaceAuth Web</title>
+ 
+   <!-- Load external CSS from static folder -->
+   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+ </head>
+ <body>
+   <!-- Main container for content -->
+   <div class="container">
+     <!-- System title -->
+     <h1>FaceAuth</h1>
+ 
+     <!-- Welcome message -->
+     <p>
+       Welcome to the facial recognition authentication system.<br>
+       Log in using your face to access the platform.
+     </p>
+ 
+     <!-- Button to initiate facial login (redirects to face_login.html) -->
+     <a href="{{ url_for('face_login_page') }}" class="btn">Login with Facial Recognition</a>
+   </div>
+ </body>
+ </html>
+ 

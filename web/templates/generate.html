@@ -1,0 +1,200 @@
+<!-- ============================================
+ User Registration + Embedding Capture Interface
+ File: generate.html
+ Authors: Diogo Azevedo and Letícia Loureiro
+ Date: 2025-04-23
+
+ Description:
+ This HTML page provides the admin with a form to register a new user
+ and capture face embeddings via live video. It detects the face,
+ draws a bounding box, and sends the images to the backend.
+
+ Technologies used:
+ - HTML, CSS, JavaScript
+ - WebRTC for webcam stream
+ - Flask/Jinja2 for rendering
+ - REST endpoints for backend communication
+ ============================================ -->
+
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <title>Add User + Embedding Capture</title>
+ 
+     <!-- Link to external stylesheet -->
+     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+ 
+     <!-- Page-specific styling -->
+     <style>
+         .form-box {
+             max-width: 500px;
+             margin: auto;
+             background: white;
+             padding: 30px;
+             border-radius: 10px;
+             box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+         }
+         input, select {
+             display: block;
+             width: 100%;
+             margin: 10px 0;
+             padding: 10px;
+         }
+         video, canvas {
+             margin-top: 20px;
+             border-radius: 8px;
+             border: 2px solid #ccc;
+         }
+         #status {
+             font-weight: bold;
+             margin-top: 15px;
+         }
+     </style>
+ </head>
+ <body>
+     <!-- Registration and capture interface -->
+     <div class="form-box">
+         <h2>Add New User</h2>
+ 
+         <!-- Admin user creation form -->
+         <form id="userForm">
+             <input type="email" name="email" placeholder="Email" required>
+             <input type="password" name="password" placeholder="Password" required>
+             <select name="role">
+                 <option value="normal">Regular User</option>
+                 <option value="admin">Administrator</option>
+             </select>
+             <input type="text" name="folder" placeholder="Folder name (e.g. diogo)" required>
+             <input type="number" name="count" placeholder="Number of embeddings" required>
+             <button type="submit">Start Capture</button>
+         </form>
+ 
+         <!-- Video and overlay canvas for face bounding box -->
+         <div style="position: relative; display: inline-block;">
+             <video id="video" width="320" height="240" autoplay></video>
+             <canvas id="overlay" width="320" height="240" style="position: absolute; top: 0; left: 0;"></canvas>
+         </div>
+ 
+         <!-- Hidden canvas for image capture -->
+         <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+ 
+         <!-- Status messages (success, errors, progress) -->
+         <p id="status"></p>
+ 
+         <!-- Navigation back to dashboard -->
+         <a href="/admin/dashboard" class="btn">Back to Dashboard</a>
+     </div>
+ 
+     <script>
+         // Get references to DOM elements
+         const form = document.getElementById('userForm');
+         const video = document.getElementById('video');
+         const canvas = document.getElementById('canvas');
+         const overlay = document.getElementById('overlay');
+         const ctx = canvas.getContext('2d');
+         const overlayCtx = overlay.getContext('2d');
+         const statusText = document.getElementById('status');
+ 
+         let stream;
+ 
+         // Start webcam stream
+         navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
+             stream = s;
+             video.srcObject = stream;
+         });
+ 
+         // Send full image to backend to save embedding
+         async function detectFaceAndCapture(imageDataURL, folder, index) {
+             const response = await fetch("/admin/save-embedding", {
+                 method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({ image: imageDataURL, folder, index })
+             });
+             return response.ok;
+         }
+ 
+         // Send image with drawOnly flag to backend for face detection only
+         async function tryDetectAndDrawFace(folder, index) {
+             // Capture frame from video
+             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+             const imageDataURL = canvas.toDataURL('image/jpeg');
+ 
+             // Ask backend to detect face and return coordinates
+             const result = await fetch("/admin/save-embedding", {
+                 method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({ image: imageDataURL, folder, index, drawOnly: true })
+             });
+ 
+             // Clear overlay before drawing
+             overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+ 
+             // If detection success, draw bounding box
+             if (result.ok) {
+                 const face = await result.json();
+                 if (face && face.x !== undefined) {
+                     overlayCtx.strokeStyle = "lime";
+                     overlayCtx.lineWidth = 2;
+                     overlayCtx.strokeRect(face.x, face.y, face.w, face.h);
+                     return true;
+                 }
+             }
+ 
+             return false;
+         }
+ 
+         // Form submission logic
+         form.onsubmit = async (e) => {
+             e.preventDefault();  // Prevent page reload
+             const formData = new FormData(form);
+             const email = formData.get('email');
+             const password = formData.get('password');
+             const role = formData.get('role');
+             const folder = formData.get('folder');
+             const count = parseInt(formData.get('count'));
+ 
+             // Send request to create user
+             const createRes = await fetch("/admin/create-user", {
+                 method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({ email, password, role, folder })
+             });
+ 
+             if (!createRes.ok) {
+                 statusText.textContent = "Error creating user.";
+                 return;
+             }
+ 
+             let captured = 0;
+             const delay = ms => new Promise(res => setTimeout(res, ms));
+ 
+             // Start capturing embeddings
+             statusText.textContent = `Capturing ${count} embeddings...`;
+ 
+             while (captured < count) {
+                 const faceDetected = await tryDetectAndDrawFace(folder, captured);
+                 if (faceDetected) {
+                     const imageDataURL = canvas.toDataURL('image/jpeg');
+                     const success = await detectFaceAndCapture(imageDataURL, folder, captured);
+ 
+                     if (success) {
+                         captured++;
+                         statusText.textContent = `Captured ${captured}/${count}`;
+                         await delay(1000); // Wait between captures
+                     }
+                 } else {
+                     statusText.textContent = "No face detected. Retrying...";
+                     await delay(1000);
+                 }
+             }
+ 
+             // Redirect after success
+             statusText.textContent = "Embeddings successfully created! Redirecting...";
+             await delay(2000);
+             window.location.href = "/admin/dashboard";
+         };
+     </script>
+ </body>
+ </html>
+ 

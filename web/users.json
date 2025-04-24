@@ -1,0 +1,12 @@
+{
+    "diogoazevedo@ipvc.pt": {
+        "password": "diogo123",
+        "role": "normal",
+        "folder": "diogo"
+    },
+    "leticialoureiro@ipvc.pt": {
+        "password": "leticia123",
+        "role": "admin",
+        "folder": "leticia"
+    }
+}
