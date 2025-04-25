@@ -67,11 +67,4 @@ App will run on `http://0.0.0.0:5000`
 ## Credits
 **Developed by:** Diogo Azevedo & Letícia Loureiro  
 **Instituto Politécnico de Viana do Castelo**  
-**Project:** FaceAuth - Facial Recognition Authentication System  
-**Supervisor:** [Your Supervisor's Name]
-
----
-
-## License
-This project is intended for academic and educational purposes only.
-
+**Project:** FaceAuth - Facial Recognition Authentication System
