@@ -24,6 +24,7 @@ import base64
 import pickle
 from datetime import datetime
 from io import BytesIO
+import bcrypt
 
 # === Third-party dependencies ===
 import numpy as np
@@ -35,9 +36,14 @@ from PIL import Image
 from recognize_m import FaceRecognizer
 from generate_multiple_embeddings_m import EmbeddingGenerator
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # === Flask app setup ===
 app = Flask(__name__)
-app.secret_key = 'faceauth-secret-key'  # Used to secure session cookies
+import os
+app.secret_key = os.getenv("SECRET_KEY")
+
 
 # === Path to the JSON file that stores registered users ===
 USERS_DB = os.path.join(os.path.dirname(__file__), 'users.json')
@@ -73,17 +79,19 @@ def manual_login():
         password = request.form['password']
         users = load_users()
 
-        # Verify credentials
-        if email in users and users[email]['password'] == password:
-            session['user'] = email
-            session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-            session['role'] = users[email]['role']
-            # Redirect based on user role
-            return redirect(url_for('admin_dashboard' if users[email]['role'] == 'admin' else 'user_page'))
-        else:
-            return render_template('login.html', error='Invalid credentials.')
+        # Verify credentials with bcrypt
+        if email in users:
+            stored_hash = users[email]['password'].encode()
+            if bcrypt.checkpw(password.encode(), stored_hash):
+                session['user'] = email
+                session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+                session['role'] = users[email]['role']
+                return redirect(url_for('admin_dashboard' if users[email]['role'] == 'admin' else 'user_page'))
+
+        return render_template('login.html', error='Invalid credentials.')
 
     return render_template('login.html')
+
 
 # Admin dashboard route (user listing + actions)
 @app.route('/admin/dashboard')
@@ -116,10 +124,12 @@ def admin_add():
     if email in users:
         return 'User already exists!'
 
+    hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     users[email] = {
-        'password': password,
+        'password': hashed_pw,
         'role': role
     }
+
     save_users(users)
     return redirect(url_for('admin_dashboard'))
 
@@ -207,11 +217,13 @@ def create_user():
     if os.path.exists(folder_path):
         return "Folder name already exists", 400
 
+    hashed_pw = bcrypt.hashpw(data['password'].encode(), bcrypt.gensalt()).decode()
     users[email] = {
-        "password": data['password'],
+        "password": hashed_pw,
         "role": data['role'],
         "folder": folder
     }
+
     save_users(users)
     return "User created", 200
 
