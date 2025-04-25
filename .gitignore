@@ -70,3 +70,4 @@ Thumbs.db
 # Ignore embeddings
 embeddings/**/*.pkl
 
+web/users.json

@@ -1,0 +1,121 @@
+<!-- ============================================
+ Admin Dashboard - FaceAuth Web Interface
+ File: dashboard.html
+ Authors: Diogo Azevedo and Letícia Loureiro
+ Date: 2025-04-22
+
+ Description:
+ This HTML page represents the main admin dashboard of the FaceAuth system.
+ It allows administrators to:
+ - View the list of registered users
+ - Add new users (via redirect to embedding capture page)
+ - Remove existing users
+
+ This file is rendered with Jinja2 through Flask and styled with inline CSS.
+ ============================================ -->
+
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <title>Admin Dashboard - FaceAuth</title>
+ 
+     <!-- Link to external stylesheet -->
+     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+ 
+     <!-- Inline CSS for dashboard layout and table styling -->
+     <style>
+         body {
+             font-family: Arial, sans-serif;   /* Set base font */
+             padding: 30px;                    /* Add space around content */
+             background-color: #f4f4f4;        /* Light gray background */
+         }
+         h2 {
+             text-align: center;
+             margin-bottom: 30px;
+         }
+         .btn {
+             padding: 12px 24px;
+             font-size: 16px;
+             border: none;
+             border-radius: 6px;
+             background-color: #007bff;        /* Primary blue */
+             color: white;
+             cursor: pointer;
+             text-decoration: none;
+             display: inline-block;
+             margin-bottom: 30px;
+         }
+         .btn:hover {
+             background-color: #0056b3;        /* Darker on hover */
+         }
+         table {
+             width: 100%;                      /* Full-width table */
+             border-collapse: collapse;        /* Remove gaps between borders */
+             margin-top: 10px;
+             background: white;
+         }
+         th, td {
+             padding: 12px;
+             border: 1px solid #ccc;           /* Light gray border for each cell */
+             text-align: left;
+         }
+         form {
+             display: inline;                  /* Keep delete button inline */
+         }
+         .logout {
+             margin-top: 40px;
+             display: block;
+             text-align: center;
+         }
+     </style>
+ </head>
+ <body>
+ 
+     <!-- Header bar showing the page title and logged-in admin user -->
+     <div style="color: black; padding: 10px;">
+         <!-- Left side: dashboard title -->
+         <span style="float: left; font-size: 40px;">Admin Dashboard</span>
+ 
+         <!-- Right side: show current user's email and logout link -->
+         <span style="float: right; font-size: 30px;">
+             {{ session['user'] }} | 
+             <a href="/logout" style="color: #ccc;">Logout</a>
+         </span>
+     </div>
+ 
+     <!-- Central action: Add new user button -->
+     <div style="text-align: center;">
+         <!-- Redirects to /admin/generate, where admin creates a new user -->
+         <a href="/admin/generate" class="btn">Add New User</a>
+     </div>
+ 
+     <!-- Table showing all registered users -->
+     <table>
+         <thead>
+             <tr>
+                 <th>Email</th>   <!-- Email of the user -->
+                 <th>Role</th>    <!-- Role: admin or normal -->
+                 <th>Actions</th> <!-- Remove button -->
+             </tr>
+         </thead>
+         <tbody>
+             <!-- Loop through all users passed from Flask -->
+             {% for email, info in users.items() %}
+             <tr>
+                 <td>{{ email }}</td>           <!-- User's email -->
+                 <td>{{ info.role }}</td>       <!-- User's role -->
+                 <td>
+                     <!-- Delete user form (POST request to /admin/remove) -->
+                     <form action="/admin/remove" method="POST">
+                         <input type="hidden" name="email" value="{{ email }}">  <!-- Pass user's email -->
+                         <button type="submit" class="btn" style="background-color: #dc3545;">Remove</button>
+                     </form>
+                 </td>
+             </tr>
+             {% endfor %}
+         </tbody>
+     </table>
+ </body>
+ </html>
+ 

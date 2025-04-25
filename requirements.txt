@@ -3,3 +3,6 @@ mediapipe
 numpy
 tflite-runtime
 picamera2
+Pillow
+flask
+python-dotenv

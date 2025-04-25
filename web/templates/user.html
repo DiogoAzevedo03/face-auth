@@ -1,0 +1,84 @@
+<!-- ============================================
+ User Area Page - FaceAuth
+ File: user.html
+ Authors: Diogo Azevedo and Letícia Loureiro
+ Date: 2025-04-23
+
+ Description:
+ This is the user dashboard for authenticated users.
+ It displays basic session details and navigation options.
+
+ Technologies:
+ - HTML and CSS
+ - Flask (Jinja2 session data rendering)
+ ============================================ -->
+
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <!-- Character encoding -->
+     <meta charset="UTF-8">
+ 
+     <!-- Page title -->
+     <title>User Area</title>
+ 
+     <!-- External stylesheet for shared styles -->
+     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+ 
+     <!-- Inline CSS for specific layout/styling of user page -->
+     <style>
+         /* Main container for user info */
+         .info-box {
+             background: white;
+             padding: 30px;
+             border-radius: 10px;
+             box-shadow: 0 0 15px rgba(0,0,0,0.1);
+             max-width: 600px;
+             margin: auto;
+         }
+ 
+         /* Section heading */
+         .info-box h2 {
+             margin-bottom: 20px;
+         }
+ 
+         /* Style for each line of session info */
+         .info-box p {
+             font-size: 18px;
+             margin: 10px 0;
+         }
+ 
+         /* Style for navigation buttons */
+         .btn {
+             padding: 10px 20px;
+             font-size: 16px;
+             border: none;
+             border-radius: 5px;
+             background-color: #007bff;
+             color: white;
+             text-decoration: none;
+             margin-right: 10px;
+         }
+ 
+         /* Button hover effect */
+         .btn:hover {
+             background-color: #0056b3;
+         }
+     </style>
+ </head>
+ <body>
+     <!-- Container displaying user session info -->
+     <div class="info-box">
+         <h2>Welcome</h2>
+ 
+         <!-- Display email and login time from session -->
+         <p><strong>Email:</strong> {{ session['user'] }}</p>
+         <p><strong>Login Time:</strong> {{ session['login_time'] }}</p>
+ 
+         <!-- Navigation buttons -->
+         <a class="btn" href="/">Back to Home</a>
+         <a class="btn" href="/logout">Logout</a>
+     </div>
+ </body>
+ </html>
+ 

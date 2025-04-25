@@ -1,93 +1,151 @@
-# FaceAuth - Face Embedding Generator
 
- - author branches:
-   - diogo
-   - leticia 
+# FaceAuth - Facial Recognition Authentication System
 
----
+##  Overview
 
- **Overview**  
-This project is part of the FaceAuth system, developed to provide facial recognition authentication on a Raspberry Pi 5.  
-It consists of two main scripts:
+FaceAuth is a facial recognition-based authentication system designed to work seamlessly on a **Raspberry Pi 5** using **TensorFlow Lite** and **MediaPipe**.  
+It supports real-time face detection, embedding generation, and user recognition for secure logins via a web-based interface.
 
-- **generate_multiple_embeddings.py**:  
-  Captures faces from the camera, generates embeddings using a MobileFaceNet model (TensorFlow Lite), and saves them for future recognition.
-
-- **recognize.py**:  
-  Detects faces in real time and identifies users by comparing live embeddings with the stored ones.
-
-Face detection is performed using **MediaPipe** for improved precision and performance.
+This project is organized into modules for:
+- Capturing and embedding faces
+- Real-time face recognition
+- Web-based login interface (Flask)
 
 ---
 
- **How to Run**
+## Project Structure
 
-### 1. Install Required Dependencies
+```
+face-auth/
+│
+├── embeddings/                  # Where all face embeddings are saved (.pkl)
+├── models/
+│   └── mobilefacenet.tflite    # Pre-trained TFLite face embedding model
+├── tests/                      # Scripts for camera and embedding tests
+│   ├── generate_multiple_embeddings.py
+│   ├── recognize.py
+│   └── test_camera.py
+├── tools/                      # Tools to compare and inspect embeddings
+│   ├── check_embedding.py
+│   └── compare_embeddings.py
+├── web/                        # Flask web interface (login, dashboard, etc.)
+│   ├── static/                 # CSS styling
+│   ├── templates/              # HTML pages (Jinja2 templates)
+│   ├── app.py                  # Flask backend
+│   ├── users.json              # Stores users, roles and passwords
+│   └── README.md               # Web app documentation
+├── recognize_m.py             # FaceRecognizer class (used by Flask backend)
+├── generate_multiple_embeddings_m.py # EmbeddingGenerator class (used by Flask backend)
+├── requirements.txt           # Required Python packages
+└── README.md                  # This file
+```
 
-Make sure your Raspberry Pi camera is properly connected and configured.
+---
 
-Then, install the required Python packages:
+## Key Functionalities
 
+- Face detection using **MediaPipe**
+- Embedding extraction using **MobileFaceNet (TFLite)**
+- User authentication via:
+  - Manual login (email + password)
+  - Facial recognition
+- Embeddings stored as `.pkl` in structured folders
+- Web login interface with role-based dashboards
+
+---
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/DiogoAzevedo03/face-auth.git
+cd face-auth
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Generate Face Embeddings
-To capture embeddings for a new user:
+> Ensure that your **Raspberry Pi Camera** is enabled and connected.
 
+---
+
+## Running the Web App
+
+Navigate into the web folder and start the Flask app:
 ```bash
-python3 generate_multiple_embeddings.py
+cd web
+python3 app.py
 ```
-Follow the instructions in the terminal:
+App will be accessible via: `http://0.0.0.0:5000`
 
-Enter a username.
+---
 
-Choose whether to wipe or append embeddings if the user already exists.
+## Test Scripts
 
-Specify how many embeddings you want to capture.
+For testing on Raspberry Pi:
 
-The system will automatically detect your face and save embeddings to the embeddings/ folder.
-
-### 3. Recognize Faces in Real Time
-To start real-time face recognition:
-
+- **Test Camera:**
 ```bash
-python3 recognize.py
+python3 tests/test_camera.py
 ```
-The system will detect faces live:
 
-Recognized users will have their names displayed on the screen.
+- **Capture Embeddings:**
+```bash
+python3 tests/generate_multiple_embeddings.py
+```
 
-Unknown faces will be labeled as "Unknown".
-
-Press 'q' at any time to exit.
-
----
-
- **Technologies Used**
-
-- **TensorFlow Lite** – for generating 128-dimensional face embeddings (using MobileFaceNet model).
-- **MediaPipe** – for accurate and fast face detection.
-- **OpenCV** – for image processing and visualization.
-- **Picamera2** – for interfacing with the Raspberry Pi Camera.
-- **Python 3.11** – development language.
-
+- **Real-time Recognition:**
+```bash
+python3 tests/recognize.py
+```
 
 ---
 
- File Structure
+## Modules Description
 
-|File	                            |Description |
-|-----------------------------------|------------|
-|generate_multiple_embeddings.py	|Captures faces and generates embeddings, saving them per user.|
-|recognize.py	                    |Recognizes faces in real time by comparing live embeddings with stored ones.|
-|requirements.txt	                |Lists all required Python packages.|
-|models/mobilefacenet.tflite	    |Pre-trained MobileFaceNet model used for embedding generation.|
-|embeddings/	                    |Directory where all user embeddings are stored.|
-|README.md	                        |This documentation file.|
+### `generate_multiple_embeddings_m.py`
+- Captures camera input and detects faces
+- Generates face embeddings
+- Saves embeddings in `embeddings/<user>/` folder
+- Used internally by the web app (admin user creation)
+
+### `recognize_m.py`
+- Loads embeddings from disk
+- Detects live faces and compares to known users
+- Returns matched identity or "Unknown"
+- Used by Flask backend to handle face login
 
 ---
 
- Why Embeddings Are Needed
-Face embeddings are compact numerical representations of faces.
-They allow the system to compare and recognize users efficiently without storing raw images, improving speed, security, and privacy.
+## Dependencies
+
+Listed in `requirements.txt`:
+- opencv-python
+- mediapipe
+- numpy
+- tflite-runtime
+- picamera2
+- Pillow
+
+Install with:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Notes
+
+- Passwords in `users.json` are stored in plaintext (for demo use only)
+- Not optimized for production — no HTTPS or secure user handling
+- Recommended: run on **Raspberry Pi OS** with Python 3.9+
+
+---
+
+## Authors
+
+- Diogo Azevedo  
+- Letícia Loureiro  
+- Instituto Politécnico de Viana do Castelo 

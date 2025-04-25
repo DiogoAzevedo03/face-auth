@@ -2,24 +2,66 @@
 
 ## Overview
 
-This folder contains scripts to test the Raspberry Pi camera and capture face embeddings for facial recognition.
+This folder contains **testing scripts** used for local testing, validation, and debugging during development of the FaceAuth system. These scripts are particularly useful when working directly on a **Raspberry Pi** to ensure facial recognition components are functioning correctly.
 
-## How to run
+---
 
-1. Install dependencies (once):
-    ```bash
-    pip install -r requirements.txt
-    ```
+## Scripts Included
 
-2. Test if the camera is working:
-    ```bash
-    python3 tests/test_camera.py
-    ```
+### `test_camera.py`
+- **Purpose:** Checks if the Raspberry Pi camera is properly connected and streams video.
+- **How to run:**  
+  ```bash
+  python3 tests/test_camera.py
+  ```
+### generate_multiple_embeddings.py
+Purpose: Captures face embeddings from a live camera feed using MobileFaceNet (TFLite).
+
+Allows the user to append or wipe existing embeddings.
+
+Saves embeddings to embeddings/<username>/ as .pkl files.
+
+How to run:
+```bash
+python3 tests/generate_multiple_embeddings.py
+```
+### recognize.py
+Purpose: Detects and identifies faces in real-time using previously captured embeddings.
+
+Loads embeddings from embeddings/ and matches live faces to known users.
+
+How to run:
+
+```bash
+python3 tests/recognize.py
+```
+
+### Requirements
+All scripts rely on the following dependencies listed in the project's requirements.txt:
+
+```bash
+opencv-python
+mediapipe
+numpy
+tflite-runtime
+picamera2
+Pillow
+To install them:
+```
 
 
-> 📷 Note: You need to run this directly on the Raspberry Pi with a connected camera.
+```bash
 
-## Purpose of each script
+pip install -r requirements.txt
+```
 
-- `test_camera.py`  
-  Checks if the camera is working by displaying a live video feed for 60 seconds.
+### Note: These scripts require a connected camera and are intended to be run directly on a Raspberry Pi device.
+
+### How It Works
+Uses MediaPipe for face detection.
+
+Uses MobileFaceNet (TFLite) to extract face embeddings.
+
+Embeddings are stored using Pickle.
+
+Real-time identification is based on distance threshold matching.
