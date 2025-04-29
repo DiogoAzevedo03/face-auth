@@ -128,15 +128,45 @@ def face_login():
                     session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
                     session['role'] = user.get('role')
 
-                    # Return success response with redirection based on role
+                    # Calcular sugestões mesmo que tenha havido match
+                    distances = []
+                    for other_name, known_emb in recognizer.known_embeddings.items():
+                        dist = np.linalg.norm(embedding - known_emb)
+                        distances.append((other_name, dist))
+
+                    # Ordenar pelas menores distâncias
+                    distances.sort(key=lambda x: x[1])
+                    suggestions = [name for name, _ in distances[:3]]
+
                     return jsonify({
                         "success": True,
                         "user": name,
-                        "redirect": "/admin/dashboard" if user.get('role') == 'admin' else "/user"
+                        "redirect": "/admin/dashboard" if user.get('role') == 'admin' else "/user",
+                        "suggestions": suggestions
                     })
 
-    # If no match or no face detected
-    return jsonify({"success": False})
+
+    # If no match or no face detected, suggest similar users
+    suggestions = []
+
+    if 'embedding' in locals():  # Só se tiver gerado embedding
+        # Calcula distância de todos os embeddings conhecidos
+        distances = []
+        for name, known_emb in recognizer.known_embeddings.items():
+            dist = np.linalg.norm(embedding - known_emb)
+            distances.append((name, dist))
+
+        # Ordena pelas distâncias mais pequenas (mais parecidos)
+        distances.sort(key=lambda x: x[1])
+
+        # Pega no top 3 nomes mais parecidos (se existirem)
+        suggestions = [name for name, _ in distances[:3]]
+
+    return jsonify({
+        "success": False,
+        "suggestions": suggestions
+    })
+
 
 # === Authenticated User Area ===
 @auth_bp.route('/user')
@@ -148,3 +178,28 @@ def user_page():
     if 'user' not in session:
         return redirect(url_for('auth.face_login_page'))
     return render_template('user.html')
+
+# === Manual Select from Suggestions ===
+@auth_bp.route('/manual-select')
+def manual_select():
+    """
+    Logs in the user selected manually from the suggestions list.
+    This route is called when the user clicks on a suggested identity.
+    """
+    selected_name = request.args.get('user')  # Nome selecionado pelo botão
+
+    if not selected_name:
+        return redirect(url_for('auth.face_login_page'))
+
+    users = load_users()
+    
+    # Procurar pelo utilizador cujo nome (pasta) corresponde
+    for email, user in users.items():
+        if user.get('folder') == selected_name:
+            session['user'] = email
+            session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            session['role'] = user.get('role')
+            return redirect('/admin/dashboard' if user.get('role') == 'admin' else '/user')
+
+    # Se não encontrar, volta para o login facial
+    return redirect(url_for('auth.face_login_page'))

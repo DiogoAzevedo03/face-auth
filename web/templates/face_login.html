@@ -18,14 +18,14 @@
      <meta charset="UTF-8">
      <title>Face Recognition Login</title>
  
-     <!-- Load external CSS file -->
+     <!-- Link to external CSS stylesheet -->
      <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
  
-     <!-- Page-specific styling for video and alignment -->
+     <!-- Inline CSS styling for video and layout -->
      <style>
          video, canvas {
-             border-radius: 10px;      /* Rounded edges for media */
-             margin-top: 10px;         /* Spacing below title */
+             border-radius: 10px;      /* Rounded edges */
+             margin-top: 10px;         /* Space between elements */
          }
          .centered {
              text-align: center;       /* Center content horizontally */
@@ -33,92 +33,149 @@
      </style>
  </head>
  <body class="centered">
-     <!-- Page heading -->
+     <!-- Main title of the page -->
      <h1>Face Recognition Login</h1>
  
-     <!-- Live video stream from the user's camera -->
+     <!-- Live camera stream -->
      <video id="video" width="320" height="240" autoplay></video>
  
-     <!-- Hidden canvas for capturing an image frame from the video -->
+     <!-- Hidden canvas to capture a frame from the video -->
      <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
  
-     <!-- Text for displaying current camera/login status -->
+     <!-- Text label for camera and login status -->
      <p id="status">Initializing camera...</p>
  
-     <!-- Fallback button for manual login -->
+     <!-- Button to confirm recognized identity (initially hidden) -->
+     <button id="confirmBtn" onclick="confirmLogin()" style="display: none;">Confirm</button>
+ 
+     <!-- Button to reject recognized identity (initially hidden) -->
+     <button id="rejectBtn" onclick="rejectRecognition()" style="display: none;">Not Me</button>
+ 
+     <!-- Area to display suggestions of similar users (initially hidden) -->
+     <div id="suggestions" style="display:none; margin-top: 15px;"></div>
+ 
+     <!-- Button to use manual login instead -->
      <button onclick="loginManual()">Manual Login</button>
  
      <script>
-         // Reference to DOM elements
+         // === DOM Element References ===
          const video = document.getElementById('video');
          const canvas = document.getElementById('canvas');
          const statusText = document.getElementById('status');
+         const confirmBtn = document.getElementById('confirmBtn');
+         const rejectBtn = document.getElementById('rejectBtn');
+         const suggestionsDiv = document.getElementById('suggestions');
          const manualLoginUrl = "{{ url_for('auth.manual_login') }}";
-
  
-         // Request access to the webcam and stream it into the <video> element
+         let redirectUrl = "";             // Store redirection URL after login
+         let storedSuggestions = [];       // Store user suggestions in case of rejection
+ 
+         // === Start camera stream ===
          navigator.mediaDevices.getUserMedia({ video: true })
              .then(stream => {
-                 // Assign stream to video element
                  video.srcObject = stream;
- 
-                 // Update status message
                  statusText.textContent = "Capturing image...";
- 
-                 // Wait 3 seconds and then take a snapshot
-                 setTimeout(captureAndSend, 3000);
+                 setTimeout(captureAndSend, 3000); // Capture image after delay
              })
              .catch(err => {
-                 // Handle camera access failure
                  statusText.textContent = "Error accessing camera.";
                  console.error(err);
              });
  
-         // Capture a frame from the video, convert to image, and send to server
+         // === Capture image from video and send to server ===
          function captureAndSend() {
              const ctx = canvas.getContext('2d');
- 
-             // Draw the current video frame to the hidden canvas
              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
- 
-             // Convert the canvas content to a Base64 image string
              const imageData = canvas.toDataURL('image/jpeg');
  
-             // Update status
              statusText.textContent = "Processing image...";
  
-             // Send image to server via POST
              fetch("/face-login", {
                  method: "POST",
-                 headers: {
-                     "Content-Type": "application/json"
-                 },
+                 headers: { "Content-Type": "application/json" },
                  body: JSON.stringify({ image: imageData })
              })
              .then(res => res.json())
              .then(data => {
-                 // Debugging info in console
                  console.log("Server response:", data);
  
-                 // Check if user was recognized successfully
                  if (data.success) {
-                     statusText.textContent = `Welcome, ${data.user}`;
+                     // Successful recognition
+                     statusText.textContent = `Welcome, ${data.user}. Please confirm to continue.`;
+                     redirectUrl = data.redirect;
+                     confirmBtn.style.display = "inline-block";
+                     rejectBtn.style.display = "inline-block";
  
-                     // Redirect after a short delay
-                     setTimeout(() => {
-                         window.location.href = data.redirect;
-                     }, 1500);
+                     // Store suggestions for later if needed
+                     storedSuggestions = data.suggestions || [];
+                     suggestionsDiv.style.display = "none";
                  } else {
-                     // If not recognized
+                     // Recognition failed
                      statusText.textContent = "User not recognized.";
+                     if (data.suggestions && data.suggestions.length > 0) {
+                         showSuggestions(data.suggestions);
+                     }
                  }
              });
          }
  
-         // Redirects to the manual login page
+         // === Confirm recognition and proceed ===
+         function confirmLogin() {
+             window.location.href = redirectUrl;
+         }
+ 
+         // === Reject recognition and show possible alternatives ===
+         function rejectRecognition() {
+             statusText.textContent = "Are you one of these users?";
+             confirmBtn.style.display = "none";
+             rejectBtn.style.display = "none";
+ 
+             if (storedSuggestions.length > 0) {
+                 showSuggestions(storedSuggestions, true);  // Show suggestions with fallback option
+             } else {
+                 suggestionsDiv.innerHTML = "<p>No suggestions available.</p>";
+                 suggestionsDiv.style.display = "block";
+             }
+         }
+ 
+         // === Display suggested similar users as selectable buttons ===
+         function showSuggestions(suggestions, showNoneButton = false) {
+             suggestionsDiv.innerHTML = "";
+             suggestionsDiv.style.display = "block";
+ 
+             suggestions.forEach(user => {
+                 const btn = document.createElement("button");
+                 btn.textContent = user;
+                 btn.onclick = () => manualUserSelection(user);
+                 suggestionsDiv.appendChild(btn);
+             });
+ 
+             // If enabled, add a "None of these" fallback option
+             if (showNoneButton) {
+                 const noneBtn = document.createElement("button");
+                 noneBtn.textContent = "None of these";
+                 noneBtn.style.marginLeft = "10px";
+                 noneBtn.onclick = () => {
+                     suggestionsDiv.style.display = "none";
+                     statusText.textContent = "Retrying recognition...";
+                     setTimeout(captureAndSend, 1000);
+                 };
+                 suggestionsDiv.appendChild(noneBtn);
+             }
+         }
+ 
+         // === When user selects one of the suggested users ===
+         function manualUserSelection(userName) {
+             statusText.textContent = `You selected: ${userName}. Redirecting...`;
+             setTimeout(() => {
+                 window.location.href = "/manual-select?user=" + encodeURIComponent(userName);
+             }, 1000);
+         }
+ 
+         // === Manual login fallback ===
          function loginManual() {
-            window.location.href = manualLoginUrl;
-        }
+             window.location.href = manualLoginUrl;
+         }
      </script>
  </body>
  </html>
