@@ -80,15 +80,15 @@
          <!-- Right side: show current user's email and logout link -->
          <span style="float: right; font-size: 30px;">
              {{ session['user'] }} | 
-             <a href="/logout" style="color: #ccc;">Logout</a>
-         </span>
+             <a href="{{ url_for('auth.logout') }}" style="color: #ccc;">Logout</a>
+            </span>
      </div>
  
      <!-- Central action: Add new user button -->
      <div style="text-align: center;">
          <!-- Redirects to /admin/generate, where admin creates a new user -->
-         <a href="/admin/generate" class="btn">Add New User</a>
-     </div>
+         <a href="{{ url_for('face.admin_generate') }}" class="btn">Add New User</a>
+        </div>
  
      <!-- Table showing all registered users -->
      <table>
@@ -107,8 +107,8 @@
                  <td>{{ info.role }}</td>       <!-- User's role -->
                  <td>
                      <!-- Delete user form (POST request to /admin/remove) -->
-                     <form action="/admin/remove" method="POST">
-                         <input type="hidden" name="email" value="{{ email }}">  <!-- Pass user's email -->
+                     <form action="{{ url_for('admin.admin_remove') }}" method="POST">
+                        <input type="hidden" name="email" value="{{ email }}">  <!-- Pass user's email -->
                          <button type="submit" class="btn" style="background-color: #dc3545;">Remove</button>
                      </form>
                  </td>
