@@ -53,6 +53,8 @@
          const video = document.getElementById('video');
          const canvas = document.getElementById('canvas');
          const statusText = document.getElementById('status');
+         const manualLoginUrl = "{{ url_for('auth.manual_login') }}";
+
  
          // Request access to the webcam and stream it into the <video> element
          navigator.mediaDevices.getUserMedia({ video: true })
@@ -115,8 +117,8 @@
  
          // Redirects to the manual login page
          function loginManual() {
-             window.location.href = "/login";
-         }
+            window.location.href = manualLoginUrl;
+        }
      </script>
  </body>
  </html>

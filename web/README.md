@@ -59,8 +59,8 @@ App will run on `http://0.0.0.0:5000`
 ---
 
 ## Security Notes
-- Passwords are stored in plaintext in `users.json`.
-- No HTTPS or production server config — meant for prototype/demo.
+ - Passwords are hashed with bcrypt.
+ - You can run migrate_passwords.py to convert old plain-text passwords to secure hashes.
 
 ---
 
