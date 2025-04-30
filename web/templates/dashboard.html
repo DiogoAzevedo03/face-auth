@@ -24,29 +24,53 @@
      <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
  
      <!-- Inline CSS for dashboard layout and table styling -->
-     <style>
-         body {
-             font-family: Arial, sans-serif;   /* Set base font */
-             padding: 30px;                    /* Add space around content */
-             background-color: #f4f4f4;        /* Light gray background */
-         }
-         h2 {
-             text-align: center;
-             margin-bottom: 30px;
-         }
-         .btn {
-             padding: 12px 24px;
-             font-size: 16px;
-             border: none;
-             border-radius: 6px;
-             background-color: #007bff;        /* Primary blue */
-             color: white;
-             cursor: pointer;
-             text-decoration: none;
-             display: inline-block;
-             margin-bottom: 30px;
-         }
-         .btn:hover {
+          <style>
+        html, body {
+        margin: 0;
+        padding: 0;
+        background: #f4f4f4;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        }
+
+        .wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vh;
+        height: 100vw;
+        background-color: #f4f4f4;
+        transform-origin: top left;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        box-sizing: border-box;
+        }
+
+        .container {
+        width: 90%;
+        }
+
+        h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        }
+        .btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        background-color: #007bff;        /* Primary blue */
+        color: white;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 30px;
+        }
+        .btn:hover {
              background-color: #0056b3;        /* Darker on hover */
          }
          table {
@@ -63,59 +87,85 @@
          form {
              display: inline;                  /* Keep delete button inline */
          }
-         .logout {
-             margin-top: 40px;
-             display: block;
-             text-align: center;
-         }
-     </style>
+        .logout {
+        margin-top: 40px;
+        display: block;
+        text-align: center;
+        }
+
+        .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 20px;
+        margin-bottom: 30px;
+        }
+    </style>
  </head>
  <body>
- 
-     <!-- Header bar showing the page title and logged-in admin user -->
-     <div style="color: black; padding: 10px;">
-         <!-- Left side: dashboard title -->
-         <span style="float: left; font-size: 40px;">Admin Dashboard</span>
- 
-         <!-- Right side: show current user's email and logout link -->
-         <span style="float: right; font-size: 30px;">
-             {{ session['user'] }} | 
-             <a href="{{ url_for('auth.logout') }}" style="color: #ccc;">Logout</a>
-            </span>
-     </div>
- 
-     <!-- Central action: Add new user button -->
-     <div style="text-align: center;">
-         <!-- Redirects to /admin/generate, where admin creates a new user -->
-         <a href="{{ url_for('face.admin_generate') }}" class="btn">Add New User</a>
+    <div class="wrapper" id="rotateWrapper">
+      <div class="container">
+        <!-- Header bar showing the page title and logged-in admin user -->
+        <div class="top-bar">
+          <span><strong>Admin Dashboard</strong></span>
+          <span>
+            {{ session['user'] }} | 
+            <a href="{{ url_for('auth.logout') }}" style="color: #dc3545;">Logout</a>
+          </span>
         </div>
+  
+        <!-- Central action: Add new user button -->
+        <div style="text-align: center;">
+          <a href="{{ url_for('face.admin_generate') }}" class="btn">Add New User</a>
+        </div>
+  
+        <!-- Table showing all registered users -->
+        <table>
+          <thead>
+            <tr>
+                <tr>
+                    <th>Email</th>   <!-- Email of the user -->
+                    <th>Role</th>    <!-- Role: admin or normal -->
+                    <th>Actions</th> <!-- Remove button -->
+                </tr>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Loop through all users passed from Flask -->
+            {% for email, info in users.items() %}
+            <tr>
+                <td>{{ email }}</td>           <!-- User's email -->
+                <td>{{ info.role }}</td>       <!-- User's role -->
+                <td>
+                    <!-- Delete user form (POST request to /admin/remove) -->
+                    <form action="{{ url_for('admin.admin_remove') }}" method="POST">
+                       <input type="hidden" name="email" value="{{ email }}">  <!-- Pass user's email -->
+                        <button type="submit" class="btn" style="background-color: #dc3545;">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+      </div>
+    </div>
+  
  
-     <!-- Table showing all registered users -->
-     <table>
-         <thead>
-             <tr>
-                 <th>Email</th>   <!-- Email of the user -->
-                 <th>Role</th>    <!-- Role: admin or normal -->
-                 <th>Actions</th> <!-- Remove button -->
-             </tr>
-         </thead>
-         <tbody>
-             <!-- Loop through all users passed from Flask -->
-             {% for email, info in users.items() %}
-             <tr>
-                 <td>{{ email }}</td>           <!-- User's email -->
-                 <td>{{ info.role }}</td>       <!-- User's role -->
-                 <td>
-                     <!-- Delete user form (POST request to /admin/remove) -->
-                     <form action="{{ url_for('admin.admin_remove') }}" method="POST">
-                        <input type="hidden" name="email" value="{{ email }}">  <!-- Pass user's email -->
-                         <button type="submit" class="btn" style="background-color: #dc3545;">Remove</button>
-                     </form>
-                 </td>
-             </tr>
-             {% endfor %}
-         </tbody>
-     </table>
+   <!-- JavaScript to rotate the layout -->
+   <script>
+     function applyPortraitMode() {
+       const wrapper = document.getElementById("rotateWrapper");
+       const width = window.innerWidth;
+       const height = window.innerHeight;
+       const offset = 80; // Adjust Y-axis offset if needed
+ 
+       wrapper.style.width = height + "px";
+       wrapper.style.height = width + "px";
+       wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+     }
+ 
+     window.addEventListener("load", applyPortraitMode);
+     window.addEventListener("resize", applyPortraitMode);
+   </script>
  </body>
  </html>
- 
