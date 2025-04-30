@@ -121,10 +121,6 @@
                     storedSuggestions = data.suggestions || [];
                      suggestionsDiv.style.display = "none";
 
-                    // Redirect after a short delay
-                     setTimeout(() => {
-                         window.location.href = data.redirect;
-                     }, 1500);
                  } else {
                     // If not recognized
                      statusText.textContent = "User not recognized.";
