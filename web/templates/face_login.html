@@ -23,27 +23,30 @@
  
      <!-- Inline CSS styling for video and layout -->
      <style>
-         video, canvas {
-             border-radius: 10px;      /* Rounded edges */
-             margin-top: 10px;         /* Space between elements */
-         }
-         .centered {
-             text-align: center;       /* Center content horizontally */
-         }
-     </style>
+        video, canvas {
+            border-radius: 10px;      /* Rounded edges for media */
+            margin-top: 10px;         /* Spacing below title */
+        }
+        .centered {
+            text-align: center;       /* Center content horizontally */
+        }
+    </style>
  </head>
  <body class="centered">
-     <!-- Main title of the page -->
-     <h1>Face Recognition Login</h1>
+    <!-- Page heading -->
+    <h1>Face Recognition Login</h1>
+
+    <!-- Live video stream from the user's camera -->
+    <video id="video" width="320" height="240" autoplay></video>
+
+    <!-- Hidden canvas for capturing an image frame from the video -->
+    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+    <!-- Text for displaying current camera/login status -->
+    <p id="status">Initializing camera...</p>
  
-     <!-- Live camera stream -->
-     <video id="video" width="320" height="240" autoplay></video>
- 
-     <!-- Hidden canvas to capture a frame from the video -->
-     <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
- 
-     <!-- Text label for camera and login status -->
-     <p id="status">Initializing camera...</p>
+     <!-- Retry Recognition Button (hidden by default) -->
+     <button id="retryBtn" onclick="retryRecognition()" style="display:none;">Try Again</button>
  
      <!-- Button to confirm recognized identity (initially hidden) -->
      <button id="confirmBtn" onclick="confirmLogin()" style="display: none;">Confirm</button>
@@ -82,7 +85,8 @@
                  console.error(err);
              });
  
-         // === Capture image from video and send to server ===
+
+          // Capture a frame from the video, convert to image, and send to server
          function captureAndSend() {
              const ctx = canvas.getContext('2d');
              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -90,28 +94,41 @@
  
              statusText.textContent = "Processing image...";
  
+            // Send image to server via POST
              fetch("/face-login", {
                  method: "POST",
-                 headers: { "Content-Type": "application/json" },
+                 headers: { 
+                    "Content-Type": "application/json" 
+                 },
                  body: JSON.stringify({ image: imageData })
              })
              .then(res => res.json())
              .then(data => {
+                // Debugging info in console
                  console.log("Server response:", data);
  
+                // Check if user was recognized successfully
                  if (data.success) {
-                     // Successful recognition
+                    // Successful recognition
                      statusText.textContent = `Welcome, ${data.user}. Please confirm to continue.`;
                      redirectUrl = data.redirect;
                      confirmBtn.style.display = "inline-block";
                      rejectBtn.style.display = "inline-block";
- 
-                     // Store suggestions for later if needed
-                     storedSuggestions = data.suggestions || [];
+
+                     retryBtn.style.display = "none";
+
+                    // Store suggestions for later if needed
+                    storedSuggestions = data.suggestions || [];
                      suggestionsDiv.style.display = "none";
+
+                    // Redirect after a short delay
+                     setTimeout(() => {
+                         window.location.href = data.redirect;
+                     }, 1500);
                  } else {
-                     // Recognition failed
+                    // If not recognized
                      statusText.textContent = "User not recognized.";
+                     retryBtn.style.display = "inline-block";
                      if (data.suggestions && data.suggestions.length > 0) {
                          showSuggestions(data.suggestions);
                      }
@@ -173,6 +190,12 @@
          }
  
          // === Manual login fallback ===
+         // Retry logic
+         function retryRecognition() {
+             statusText.textContent = "Retrying... Capturing new image.";
+             retryBtn.style.display = "none";
+             setTimeout(captureAndSend, 1000);
+         }
          function loginManual() {
             window.location.href = manualLoginUrl;
         }
