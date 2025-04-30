@@ -28,7 +28,9 @@ face-auth/
 ├── tools/                      # Tools to compare and inspect embeddings
 │   ├── check_embedding.py
 │   └── compare_embeddings.py
-├── web/                        # Flask web interface (login, dashboard, etc.)
+├── web/ 
+│   ├── utils/              
+│   ├── routes/               
 │   ├── static/                 # CSS styling
 │   ├── templates/              # HTML pages (Jinja2 templates)
 │   ├── app.py                  # Flask backend
