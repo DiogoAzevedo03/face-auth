@@ -95,6 +95,9 @@
          const ctx = canvas.getContext('2d');
          const overlayCtx = overlay.getContext('2d');
          const statusText = document.getElementById('status');
+         const createUserUrl = "{{ url_for('face.create_user') }}";
+        const saveEmbeddingUrl = "{{ url_for('face.save_embedding') }}";
+        const dashboardUrl = "{{ url_for('admin.dashboard') }}";
  
          let stream;
  
@@ -106,7 +109,7 @@
  
          // Send full image to backend to save embedding
          async function detectFaceAndCapture(imageDataURL, folder, index) {
-             const response = await fetch("/admin/save-embedding", {
+            const response = await fetch("{{ url_for('face.save_embedding') }}", {
                  method: "POST",
                  headers: { "Content-Type": "application/json" },
                  body: JSON.stringify({ image: imageDataURL, folder, index })
@@ -155,7 +158,7 @@
              const count = parseInt(formData.get('count'));
  
              // Send request to create user
-             const createRes = await fetch("/admin/create-user", {
+             const createRes = await fetch("{{ url_for('face.create_user') }}",  {
                  method: "POST",
                  headers: { "Content-Type": "application/json" },
                  body: JSON.stringify({ email, password, role, folder })
@@ -192,8 +195,8 @@
              // Redirect after success
              statusText.textContent = "Embeddings successfully created! Redirecting...";
              await delay(2000);
-             window.location.href = "/admin/dashboard";
-         };
+             window.location.href = "{{ url_for('admin.dashboard') }}";
+            };
      </script>
  </body>
  </html>

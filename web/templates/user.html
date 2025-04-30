@@ -76,9 +76,9 @@
          <p><strong>Login Time:</strong> {{ session['login_time'] }}</p>
  
          <!-- Navigation buttons -->
-         <a class="btn" href="/">Back to Home</a>
-         <a class="btn" href="/logout">Logout</a>
-     </div>
+         <a class="btn" href="{{ url_for('index') }}">Back to Home</a>
+         <a class="btn" href="{{ url_for('auth.logout') }}">Logout</a>
+        </div>
  </body>
  </html>
  

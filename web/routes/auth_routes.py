@@ -127,7 +127,7 @@ def face_login():
                     session['user'] = email
                     session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
                     session['role'] = user.get('role')
-
+                    
                     # Calcular sugestões mesmo que tenha havido match
                     distances = []
                     for other_name, known_emb in recognizer.known_embeddings.items():
@@ -166,7 +166,6 @@ def face_login():
         "success": False,
         "suggestions": suggestions
     })
-
 
 # === Authenticated User Area ===
 @auth_bp.route('/user')
