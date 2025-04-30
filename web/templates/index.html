@@ -13,34 +13,94 @@
  - Flask with Jinja2 for rendering dynamic links
  ============================================ -->
 
- <!DOCTYPE html>
- <html lang="en">
- <head>
-   <!-- Set character encoding and responsive viewport -->
-   <meta charset="UTF-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- 
-   <!-- Page title -->
-   <title>FaceAuth Web</title>
- 
-   <!-- Load external CSS from static folder -->
-   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
- </head>
- <body>
-   <!-- Main container for content -->
-   <div class="container">
-     <!-- System title -->
-     <h1>FaceAuth</h1>
- 
-     <!-- Welcome message -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <!-- Set character encoding and responsive viewport -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Page title -->
+  <title>FaceAuth Web</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vh;
+      height: 100vw;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transform-origin: top left;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 15px 30px;
+      margin-top: 20px;
+      font-size: 18px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper" id="rotateWrapper">
+    <!-- Main container for content -->
+    <div class="container">
+      <!-- System title -->
+      <h1>FaceAuth</h1>
+
+    <!-- Welcome message -->
      <p>
-       Welcome to the facial recognition authentication system.<br>
-       Log in using your face to access the platform.
-     </p>
- 
-     <!-- Button to initiate facial login (redirects to face_login.html) -->
-     <a href="{{ url_for('auth.face_login_page') }}" class="btn">Login with Facial Recognition</a>
+        Welcome to the facial recognition authentication system.<br>
+        Log in using your face to access the platform.
+      </p>
+
+      <!-- Button to initiate facial login (redirects to face_login.html) -->
+      <a href="{{ url_for('auth.face_login_page') }}" class="btn">Login with Facial Recognition</a>
     </div>
- </body>
- </html>
- 
+  </div>
+
+  <script>
+    function applyPortraitMode() {
+      const wrapper = document.getElementById("rotateWrapper");
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      const offset = 80; // ajusta este valor para mover o conteúdo no eixo Y (vertical do ecrã original)
+
+      wrapper.style.width = height + "px";
+      wrapper.style.height = width + "px";
+      wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+    }
+
+    window.addEventListener("load", applyPortraitMode);
+    window.addEventListener("resize", applyPortraitMode);
+  </script>
+</body>
+</html>
