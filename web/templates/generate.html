@@ -27,67 +27,123 @@
  
      <!-- Page-specific styling -->
      <style>
-         .form-box {
+         html, body {
+             margin: 0;
+             padding: 0;
+             background: #f4f4f4;
+             font-family: Arial, sans-serif;
+             overflow: hidden;
+             width: 100vw;
+             height: 100vh;
+         }
+ 
+         .wrapper {
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100vh;
+             height: 100vw;
+             background-color: #f4f4f4;
+             transform-origin: top left;
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             padding: 20px;
+             box-sizing: border-box;
+         }
+ 
+         .container {
              max-width: 500px;
-             margin: auto;
+             width: 90%;
              background: white;
              padding: 30px;
              border-radius: 10px;
              box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+             text-align: center;
          }
+ 
          input, select {
              display: block;
              width: 100%;
              margin: 10px 0;
              padding: 10px;
          }
+ 
          video, canvas {
              margin-top: 20px;
              border-radius: 8px;
              border: 2px solid #ccc;
          }
+ 
          #status {
              font-weight: bold;
              margin-top: 15px;
          }
+ 
+         .btn {
+             display: inline-block;
+             margin-top: 20px;
+             padding: 10px 20px;
+             font-size: 16px;
+             background-color: #007bff;
+             color: white;
+             text-decoration: none;
+             border-radius: 5px;
+         }
      </style>
  </head>
  <body>
-     <!-- Registration and capture interface -->
-     <div class="form-box">
-         <h2>Add New User</h2>
+     <div class="wrapper" id="rotateWrapper">
+         <div class="container">
+             <!-- Registration and capture interface -->
+             <h2>Add New User</h2>
  
-         <!-- Admin user creation form -->
-         <form id="userForm">
-             <input type="email" name="email" placeholder="Email" required>
-             <input type="password" name="password" placeholder="Password" required>
-             <select name="role">
-                 <option value="normal">Regular User</option>
-                 <option value="admin">Administrator</option>
-             </select>
-             <input type="text" name="folder" placeholder="Folder name (e.g. diogo)" required>
-             <input type="number" name="count" placeholder="Number of embeddings" required>
-             <button type="submit">Start Capture</button>
-         </form>
+             <!-- Admin user creation form -->
+             <form id="userForm">
+                 <input type="email" name="email" placeholder="Email" required>
+                 <input type="password" name="password" placeholder="Password" required>
+                 <select name="role">
+                     <option value="normal">Regular User</option>
+                     <option value="admin">Administrator</option>
+                 </select>
+                 <input type="text" name="folder" placeholder="Folder name (e.g. diogo)" required>
+                 <input type="number" name="count" placeholder="Number of embeddings" required>
+                 <button type="submit">Start Capture</button>
+             </form>
  
-         <!-- Video and overlay canvas for face bounding box -->
-         <div style="position: relative; display: inline-block;">
-             <video id="video" width="320" height="240" autoplay></video>
-             <canvas id="overlay" width="320" height="240" style="position: absolute; top: 0; left: 0;"></canvas>
+             <!-- Video and overlay canvas for face bounding box -->
+             <div style="position: relative; display: inline-block;">
+                 <video id="video" width="320" height="240" autoplay></video>
+                 <canvas id="overlay" width="320" height="240" style="position: absolute; top: 0; left: 0;"></canvas>
+             </div>
+ 
+             <!-- Hidden canvas for image capture -->
+             <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+ 
+             <!-- Status messages (success, errors, progress) -->
+             <p id="status"></p>
+ 
+             <!-- Navigation back to dashboard -->
+             <a href="{{ url_for('admin.dashboard') }}" class="btn">Back to Dashboard</a>
          </div>
- 
-         <!-- Hidden canvas for image capture -->
-         <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
- 
-         <!-- Status messages (success, errors, progress) -->
-         <p id="status"></p>
- 
-         <!-- Navigation back to dashboard -->
-         <a href="/admin/dashboard" class="btn">Back to Dashboard</a>
      </div>
  
      <script>
-         // Get references to DOM elements
+         // Handle layout rotation for portrait display
+         function applyPortraitMode() {
+             const wrapper = document.getElementById("rotateWrapper");
+             const width = window.innerWidth;
+             const height = window.innerHeight;
+             const offset = 80;
+             wrapper.style.width = height + "px";
+             wrapper.style.height = width + "px";
+             wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+         }
+ 
+         window.addEventListener("load", applyPortraitMode);
+         window.addEventListener("resize", applyPortraitMode);
+ 
+         // === DOM references ===
          const form = document.getElementById('userForm');
          const video = document.getElementById('video');
          const canvas = document.getElementById('canvas');
@@ -96,10 +152,10 @@
          const overlayCtx = overlay.getContext('2d');
          const statusText = document.getElementById('status');
          const createUserUrl = "{{ url_for('face.create_user') }}";
-        const saveEmbeddingUrl = "{{ url_for('face.save_embedding') }}";
-        const dashboardUrl = "{{ url_for('admin.dashboard') }}";
+         const saveEmbeddingUrl = "{{ url_for('face.save_embedding') }}";
+         const dashboardUrl = "{{ url_for('admin.dashboard') }}";
  
-         let stream;
+        let stream;
  
          // Start webcam stream
          navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
@@ -192,12 +248,11 @@
                  }
              }
  
-             // Redirect after success
+            // Redirect after success
              statusText.textContent = "Embeddings successfully created! Redirecting...";
              await delay(2000);
              window.location.href = "{{ url_for('admin.dashboard') }}";
-            };
+         };
      </script>
  </body>
  </html>
- 

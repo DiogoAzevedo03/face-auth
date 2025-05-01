@@ -17,33 +17,47 @@
  <!DOCTYPE html>
  <html lang="en">
  <head>
-     <!-- Character encoding -->
+         <!-- Character encoding -->
      <meta charset="UTF-8">
-     
-     <!-- Page title -->
+
+        <!-- Page title -->
      <title>Manual Login - FaceAuth</title>
-     
-     <!-- Inline CSS for styling the login page -->
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+     <!-- Embedded style adapted for portrait mode layout -->
      <style>
-         /* Style the entire page layout */
-         body {
+         html, body {
+             margin: 0;
+             padding: 0;
+             background: #f4f4f4;
+             overflow: hidden;
              font-family: Arial, sans-serif;
-             display: flex;                          /* Use Flexbox to center content */
-             align-items: center;                    /* Vertically center */
-             justify-content: center;                /* Horizontally center */
-             height: 100vh;                          /* Full viewport height */
-             background-color: #f4f4f4;              /* Light grey background */
+             width: 100vw;
+             height: 100vh;
          }
  
-         /* Style the login form box */
-         .login-box {
+         .wrapper {
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100vh;
+             height: 100vw;
+             background-color: #f4f4f4;
+             transform-origin: top left;
+             display: flex;
+             justify-content: center;
+             align-items: center;
+         }
+ 
+         .container {
              background: white;
              padding: 30px;
              border-radius: 10px;
-             box-shadow: 0 0 10px rgba(0,0,0,0.1);   /* Soft shadow */
+             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+             width: 90%;
+             max-width: 400px;
          }
  
-         /* Style inputs */
          input {
              display: block;
              margin: 10px 0;
@@ -51,22 +65,19 @@
              width: 100%;
          }
  
-         /* Style login button */
          button {
              padding: 10px 20px;
-             background: #007bff;                    /* Blue background */
+             background: #007bff;
              color: white;
              border: none;
              cursor: pointer;
              width: 100%;
          }
  
-         /* Button hover effect */
          button:hover {
-             background-color: #0056b3;              /* Darker blue on hover */
+             background-color: #0056b3;
          }
  
-         /* Error message style */
          .error {
              color: red;
              margin-bottom: 10px;
@@ -74,22 +85,39 @@
      </style>
  </head>
  <body>
-     <!-- Login form box -->
-     <div class="login-box">
-         <h2>Manual Login</h2>
- 
-         <!-- If an error exists (invalid credentials), display it -->
-         {% if error %}
-             <p class="error">{{ error }}</p>
-         {% endif %}
- 
-         <!-- Login form -->
-         <form method="POST">
-             <input type="email" name="email" placeholder="Email" required>
-             <input type="password" name="password" placeholder="Password" required>
-             <button type="submit">Login</button>
-         </form>
+     <div class="wrapper" id="rotateWrapper">
+         <div class="container">
+             <h2>Manual Login</h2>
+
+            <!-- If an error exists (invalid credentials), display it -->
+             {% if error %}
+                 <p class="error">{{ error }}</p>
+             {% endif %}
+
+            <!-- Login form -->
+             <form method="POST">
+                 <input type="email" name="email" placeholder="Email" required>
+                 <input type="password" name="password" placeholder="Password" required>
+                 <button type="submit">Login</button>
+             </form>
+         </div>
      </div>
+ 
+     <!-- JS script to apply portrait layout rotation -->
+     <script>
+         function applyPortraitMode() {
+             const wrapper = document.getElementById("rotateWrapper");
+             const width = window.innerWidth;
+             const height = window.innerHeight;
+             const offset = 80;
+             wrapper.style.width = height + "px";
+             wrapper.style.height = width + "px";
+             wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+         }
+ 
+         window.addEventListener("load", applyPortraitMode);
+         window.addEventListener("resize", applyPortraitMode);
+     </script>
  </body>
  </html>
  
