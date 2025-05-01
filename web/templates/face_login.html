@@ -13,178 +13,219 @@
  ============================================ -->
 
  <!DOCTYPE html>
- <html lang="en">
- <head>
-     <meta charset="UTF-8">
-     <title>Face Recognition Login</title>
- 
-     <!-- Link to external CSS stylesheet -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login with FaceAuth</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- Link to external CSS stylesheet -->
      <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
- 
-     <!-- Inline CSS styling for video and layout -->
-     <style>
-        video, canvas {
-            border-radius: 10px;      /* Rounded edges for media */
-            margin-top: 10px;         /* Spacing below title */
-        }
-        .centered {
-            text-align: center;       /* Center content horizontally */
-        }
-    </style>
- </head>
- <body class="centered">
-    <!-- Page heading -->
-    <h1>Face Recognition Login</h1>
 
-    <!-- Live video stream from the user's camera -->
-    <video id="video" width="320" height="240" autoplay></video>
+       <!-- Inline CSS styling for video and layout -->
+  <style>
+    html, body {
+  margin: 0;
+  padding: 0;
+  background: #f4f4f4;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  width: 100vw;
+  height: 100vh;
+}
+.wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vh;
+  height: 100vw;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-origin: top left;
+}
 
-    <!-- Hidden canvas for capturing an image frame from the video -->
-    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
-    <!-- Text for displaying current camera/login status -->
-    <p id="status">Initializing camera...</p>
- 
-     <!-- Retry Recognition Button (hidden by default) -->
-     <button id="retryBtn" onclick="retryRecognition()" style="display:none;">Try Again</button>
- 
-     <!-- Button to confirm recognized identity (initially hidden) -->
-     <button id="confirmBtn" onclick="confirmLogin()" style="display: none;">Confirm</button>
- 
-     <!-- Button to reject recognized identity (initially hidden) -->
-     <button id="rejectBtn" onclick="rejectRecognition()" style="display: none;">Not Me</button>
- 
-     <!-- Area to display suggestions of similar users (initially hidden) -->
-     <div id="suggestions" style="display:none; margin-top: 15px;"></div>
- 
+.container {
+  text-align: center;
+}
+  </style>
+</head>
+<body>
+  <!-- Rotated wrapper for portrait layout -->
+    <div class="wrapper" id="rotateWrapper">
+      <div class="container">
+        <!-- Page heading -->
+        <h1>Face Recognition Login</h1>
+
+        <!-- Live video stream from the user's camera -->
+        <video id="video" width="320" height="240" autoplay></video>
+
+        <!-- Hidden canvas for capturing an image frame from the video -->
+        <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+        <!-- Text for displaying current camera/login status -->
+        <p id="status">Initializing camera...</p>
+
+        <!-- Retry Recognition Button (hidden by default) -->
+        <button id="retryBtn" onclick="retryRecognition()" style="display:none;">Try Again</button>
+
+        <!-- Button to confirm recognized identity (initially hidden) -->
+        <button id="confirmBtn" onclick="confirmLogin()" style="display: none;">Confirm</button>
+
+        <!-- Button to reject recognized identity (initially hidden) -->
+        <button id="rejectBtn" onclick="rejectRecognition()" style="display: none;">Not Me</button>
+
+        <!-- Area to display suggestions of similar users (initially hidden) -->
+        <div id="suggestions" style="display:none; margin-top: 15px;"></div>
      <!-- Button to use manual login instead -->
-     <button onclick="loginManual()">Manual Login</button>
- 
-     <script>
-         // === DOM Element References ===
-         const video = document.getElementById('video');
-         const canvas = document.getElementById('canvas');
-         const statusText = document.getElementById('status');
-         const confirmBtn = document.getElementById('confirmBtn');
-         const rejectBtn = document.getElementById('rejectBtn');
-         const suggestionsDiv = document.getElementById('suggestions');
-         const manualLoginUrl = "{{ url_for('auth.manual_login') }}";
- 
-         let redirectUrl = "";             // Store redirection URL after login
+        <button onclick="loginManual()">Manual Login</button>
+      </div>
+    </div>
+  
+
+  <script>
+    function applyPortraitMode() {
+        const wrapper = document.getElementById("rotateWrapper");
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const offset = 80;
+        wrapper.style.width = height + "px";
+        wrapper.style.height = width + "px";
+        wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+    }
+
+
+
+    window.addEventListener("load", applyPortraitMode);
+    window.addEventListener("resize", applyPortraitMode);
+
+    // === DOM Element References ===
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const statusText = document.getElementById('status');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const rejectBtn = document.getElementById('rejectBtn');
+    const suggestionsDiv = document.getElementById('suggestions');
+    const manualLoginUrl = "{{ url_for('auth.manual_login') }}";
+
+    let redirectUrl = "";             // Store redirection URL after login
          let storedSuggestions = [];       // Store user suggestions in case of rejection
  
          // === Start camera stream ===
-         navigator.mediaDevices.getUserMedia({ video: true })
-             .then(stream => {
-                 video.srcObject = stream;
-                 statusText.textContent = "Capturing image...";
-                 setTimeout(captureAndSend, 3000); // Capture image after delay
-             })
-             .catch(err => {
-                 statusText.textContent = "Error accessing camera.";
-                 console.error(err);
-             });
- 
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        statusText.textContent = "Capturing image...";
+        setTimeout(captureAndSend, 3000); // Capture image after delay
+      })
+      .catch(err => {
+        statusText.textContent = "Error accessing camera.";
+        console.error(err);
+      });
 
-          // Capture a frame from the video, convert to image, and send to server
-         function captureAndSend() {
-             const ctx = canvas.getContext('2d');
-             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-             const imageData = canvas.toDataURL('image/jpeg');
- 
-             statusText.textContent = "Processing image...";
- 
-            // Send image to server via POST
-             fetch("/face-login", {
-                 method: "POST",
-                 headers: { 
-                    "Content-Type": "application/json" 
-                 },
-                 body: JSON.stringify({ image: imageData })
-             })
-             .then(res => res.json())
-             .then(data => {
-                // Debugging info in console
-                 console.log("Server response:", data);
- 
-                // Check if user was recognized successfully
-                 if (data.success) {
-                    // Successful recognition
-                     statusText.textContent = `Welcome, ${data.user}. Please confirm to continue.`;
-                     redirectUrl = data.redirect;
-                     confirmBtn.style.display = "inline-block";
-                     rejectBtn.style.display = "inline-block";
 
-                     retryBtn.style.display = "none";
+    // Capture a frame from the video, convert to image, and send to server      
+    function captureAndSend() {
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/jpeg');
 
-                    // Store suggestions for later if needed
-                    storedSuggestions = data.suggestions || [];
-                     suggestionsDiv.style.display = "none";
+      statusText.textContent = "Processing image...";
+ 
+        // Send image to server via POST
+        fetch("/face-login", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json" 
+            },
+            body: JSON.stringify({ image: imageData })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Debugging info in console
+            console.log("Server response:", data);
 
-                 } else {
-                    // If not recognized
-                     statusText.textContent = "User not recognized.";
-                     retryBtn.style.display = "inline-block";
-                     if (data.suggestions && data.suggestions.length > 0) {
-                         showSuggestions(data.suggestions);
-                     }
-                 }
-             });
-         }
- 
-         // === Confirm recognition and proceed ===
-         function confirmLogin() {
-             window.location.href = redirectUrl;
-         }
- 
-         // === Reject recognition and show possible alternatives ===
-         function rejectRecognition() {
-             statusText.textContent = "Are you one of these users?";
-             confirmBtn.style.display = "none";
-             rejectBtn.style.display = "none";
- 
-             if (storedSuggestions.length > 0) {
-                 showSuggestions(storedSuggestions, true);  // Show suggestions with fallback option
-             } else {
-                 suggestionsDiv.innerHTML = "<p>No suggestions available.</p>";
-                 suggestionsDiv.style.display = "block";
-             }
-         }
- 
-         // === Display suggested similar users as selectable buttons ===
-         function showSuggestions(suggestions, showNoneButton = false) {
-             suggestionsDiv.innerHTML = "";
-             suggestionsDiv.style.display = "block";
- 
-             suggestions.forEach(user => {
-                 const btn = document.createElement("button");
-                 btn.textContent = user;
-                 btn.onclick = () => manualUserSelection(user);
-                 suggestionsDiv.appendChild(btn);
-             });
- 
-             // If enabled, add a "None of these" fallback option
-             if (showNoneButton) {
-                 const noneBtn = document.createElement("button");
-                 noneBtn.textContent = "None of these";
-                 noneBtn.style.marginLeft = "10px";
-                 noneBtn.onclick = () => {
-                     suggestionsDiv.style.display = "none";
-                     statusText.textContent = "Retrying recognition...";
-                     setTimeout(captureAndSend, 1000);
-                 };
-                 suggestionsDiv.appendChild(noneBtn);
-             }
-         }
- 
-         // === When user selects one of the suggested users ===
-         function manualUserSelection(userName) {
-             statusText.textContent = `You selected: ${userName}. Redirecting...`;
-             setTimeout(() => {
-                 window.location.href = "/manual-select?user=" + encodeURIComponent(userName);
-             }, 1000);
-         }
- 
+            // Check if user was recognized successfully
+            if (data.success) {
+                // Successful recognition
+                statusText.textContent = `Welcome, ${data.user}. Please confirm to continue.`;
+                redirectUrl = data.redirect;
+                confirmBtn.style.display = "inline-block";
+                rejectBtn.style.display = "inline-block";
+
+                retryBtn.style.display = "none";
+
+                // Store suggestions for later if needed
+                storedSuggestions = data.suggestions || [];
+                suggestionsDiv.style.display = "none";
+
+            } else {
+                // If not recognized
+                statusText.textContent = "User not recognized.";
+                retryBtn.style.display = "inline-block";
+                if (data.suggestions && data.suggestions.length > 0) {
+                    showSuggestions(data.suggestions);
+                }
+                }
+            });
+            }
+
+    // === Confirm recognition and proceed ===
+    function confirmLogin() {
+      window.location.href = redirectUrl;
+    }
+
+    // === Reject recognition and show possible alternatives ===
+    function rejectRecognition() {
+      statusText.textContent = "Are you one of these users?";
+      confirmBtn.style.display = "none";
+      rejectBtn.style.display = "none";
+
+      if (storedSuggestions.length) {
+        showSuggestions(storedSuggestions, true);// Show suggestions with fallback option
+      } else {
+        suggestionsDiv.innerHTML = "<p>No suggestions available.</p>";
+        suggestionsDiv.style.display = "block";
+      }
+    }
+
+        // === Display suggested similar users as selectable buttons ===
+    function showSuggestions(suggestions, showNoneButton = false) {
+      suggestionsDiv.innerHTML = "";
+      suggestionsDiv.style.display = "block";
+
+      suggestions.forEach(user => {
+        const btn = document.createElement("button");
+        btn.textContent = user;
+        btn.onclick = () => manualUserSelection(user);
+        suggestionsDiv.appendChild(btn);
+      });
+
+    // If enabled, add a "None of these" fallback option
+      if (showNoneButton) {
+        const noneBtn = document.createElement("button");
+        noneBtn.textContent = "None of these";
+        noneBtn.style.marginLeft = "10px";
+        noneBtn.onclick = () => {
+          suggestionsDiv.style.display = "none";
+          statusText.textContent = "Retrying recognition...";
+          setTimeout(captureAndSend, 1000);
+        };
+        suggestionsDiv.appendChild(noneBtn);
+      }
+    }
+
+    // === When user selects one of the suggested users ===
+    function manualUserSelection(userName) {
+      statusText.textContent = `You selected: ${userName}. Redirecting...`;
+      setTimeout(() => {
+        window.location.href = "/manual-select?user=" + encodeURIComponent(userName);
+      }, 1000);
+    }
+
          // === Manual login fallback ===
          // Retry logic
          function retryRecognition() {
@@ -192,10 +233,10 @@
              retryBtn.style.display = "none";
              setTimeout(captureAndSend, 1000);
          }
-         function loginManual() {
-            window.location.href = manualLoginUrl;
-        }
-     </script>
- </body>
- </html>
- 
+    function loginManual() {
+      window.location.href = manualLoginUrl;
+    }
+  </script>
+</body>
+</html>
+

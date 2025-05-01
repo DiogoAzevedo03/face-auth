@@ -25,30 +25,52 @@
      <!-- External stylesheet for shared styles -->
      <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
  
-     <!-- Inline CSS for specific layout/styling of user page -->
-     <style>
-         /* Main container for user info */
+     <!-- Inline CSS for specific layout/styling of user page -->     
+      <style>
+         html, body {
+             margin: 0;
+             padding: 0;
+             background: #f4f4f4;
+             font-family: Arial, sans-serif;
+             overflow: hidden;
+             width: 100vw;
+             height: 100vh;
+         }
+ 
+         .wrapper {
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100vh;
+             height: 100vw;
+             background-color: #f4f4f4;
+             transform-origin: top left;
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             padding: 20px;
+             box-sizing: border-box;
+         }
+ 
          .info-box {
              background: white;
              padding: 30px;
              border-radius: 10px;
              box-shadow: 0 0 15px rgba(0,0,0,0.1);
-             max-width: 600px;
-             margin: auto;
+             max-width: 500px;
+             width: 100%;
+             text-align: center;
          }
  
-         /* Section heading */
          .info-box h2 {
              margin-bottom: 20px;
          }
  
-         /* Style for each line of session info */
          .info-box p {
              font-size: 18px;
              margin: 10px 0;
          }
  
-         /* Style for navigation buttons */
          .btn {
              padding: 10px 20px;
              font-size: 16px;
@@ -57,28 +79,46 @@
              background-color: #007bff;
              color: white;
              text-decoration: none;
-             margin-right: 10px;
+             margin: 10px 5px 0 5px;
+             display: inline-block;
          }
  
-         /* Button hover effect */
          .btn:hover {
              background-color: #0056b3;
          }
      </style>
  </head>
  <body>
-     <!-- Container displaying user session info -->
-     <div class="info-box">
-         <h2>Welcome</h2>
+     <div class="wrapper" id="rotateWrapper">
+         <!-- Container displaying user session info -->
+         <div class="info-box">
+             <h2>Welcome</h2>
  
-         <!-- Display email and login time from session -->
-         <p><strong>Email:</strong> {{ session['user'] }}</p>
-         <p><strong>Login Time:</strong> {{ session['login_time'] }}</p>
+             <!-- Display email and login time from session -->
+             <p><strong>Email:</strong> {{ session['user'] }}</p>
+             <p><strong>Login Time:</strong> {{ session['login_time'] }}</p>
  
-         <!-- Navigation buttons -->
-         <a class="btn" href="{{ url_for('index') }}">Back to Home</a>
-         <a class="btn" href="{{ url_for('auth.logout') }}">Logout</a>
-        </div>
+             <!-- Navigation buttons -->
+             <a class="btn" href="{{ url_for('index') }}">Back to Home</a>
+             <a class="btn" href="{{ url_for('auth.logout') }}">Logout</a>
+         </div>
+     </div>
+ 
+     <!-- Script to rotate layout into portrait mode -->
+     <script>
+         function applyPortraitMode() {
+             const wrapper = document.getElementById("rotateWrapper");
+             const width = window.innerWidth;
+             const height = window.innerHeight;
+             const offset = 80;
+             wrapper.style.width = height + "px";
+             wrapper.style.height = width + "px";
+             wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+         }
+ 
+         window.addEventListener("load", applyPortraitMode);
+         window.addEventListener("resize", applyPortraitMode);
+     </script>
  </body>
  </html>
  
