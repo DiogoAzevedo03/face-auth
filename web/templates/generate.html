@@ -192,10 +192,10 @@
              // If detection success, draw bounding box
              if (result.ok) {
                  const face = await result.json();
-                 if (face && face.x !== undefined) {
+                 if (face.success && face.data && face.data.x !== undefined) {
                      overlayCtx.strokeStyle = "lime";
                      overlayCtx.lineWidth = 2;
-                     overlayCtx.strokeRect(face.x, face.y, face.w, face.h);
+                     overlayCtx.strokeRect(face.data.x, face.data.y, face.data.w, face.data.h);
                      return true;
                  }
              }

@@ -137,12 +137,14 @@ def face_login():
                     # Ordenar pelas menores distâncias
                     distances.sort(key=lambda x: x[1])
                     suggestions = [name for name, _ in distances[:3]]
-
                     return jsonify({
                         "success": True,
-                        "user": name,
-                        "redirect": "/admin/dashboard" if user.get('role') == 'admin' else "/user",
-                        "suggestions": suggestions
+                        "message": "User recognized successfully.",
+                        "data": {
+                            "user": name,
+                            "redirect": "/admin/dashboard" if user.get('role') == 'admin' else "/user",
+                            "suggestions": suggestions
+                        }
                     })
 
 
@@ -164,7 +166,10 @@ def face_login():
 
     return jsonify({
         "success": False,
-        "suggestions": suggestions
+        "message": "User not recognized.",
+        "data": {
+            "suggestions": suggestions
+        }
     })
 
 # === Authenticated User Area ===

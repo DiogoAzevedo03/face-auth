@@ -118,8 +118,16 @@ def save_embedding():
 
     # If in preview mode, just return coordinates of bounding box
     if draw_only:
-        return jsonify({"x": int(x), "y": int(y), "w": int(w), "h": int(h)})
-
+        return jsonify({
+            "success": True,
+            "message": "Face detected. Returning bounding box.",
+            "data": {
+                "x": int(x),
+                "y": int(y),
+                "w": int(w),
+                "h": int(h)
+            }
+        })
     # Get face embedding from model
     embedding = embedder.get_embedding(face_crop)
 

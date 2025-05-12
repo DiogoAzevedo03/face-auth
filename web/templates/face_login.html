@@ -151,23 +151,23 @@
             // Check if user was recognized successfully
             if (data.success) {
                 // Successful recognition
-                statusText.textContent = `Welcome, ${data.user}. Please confirm to continue.`;
-                redirectUrl = data.redirect;
+                statusText.textContent = `Welcome, ${data.data.user}. Please confirm to continue.`;
+                redirectUrl = data.data.redirect;
                 confirmBtn.style.display = "inline-block";
                 rejectBtn.style.display = "inline-block";
 
                 retryBtn.style.display = "none";
 
                 // Store suggestions for later if needed
-                storedSuggestions = data.suggestions || [];
+                storedSuggestions = data.data.suggestions || [];
                 suggestionsDiv.style.display = "none";
 
             } else {
                 // If not recognized
                 statusText.textContent = "User not recognized.";
                 retryBtn.style.display = "inline-block";
-                if (data.suggestions && data.suggestions.length > 0) {
-                    showSuggestions(data.suggestions);
+                if (data.data.suggestions && data.data.suggestions.length > 0) {
+                    showSuggestions(data.data.suggestions);
                 }
                 }
             });
