@@ -114,6 +114,7 @@
     let redirectUrl = "";             // Store redirection URL after login
          let storedSuggestions = [];       // Store user suggestions in case of rejection
  
+    let detectedUserName = "";
          // === Start camera stream ===
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
@@ -151,6 +152,7 @@
             // Check if user was recognized successfully
             if (data.success) {
                 // Successful recognition
+                detectedUserName = data.data.user;
                 statusText.textContent = `Welcome, ${data.data.user}. Please confirm to continue.`;
                 redirectUrl = data.data.redirect;
                 confirmBtn.style.display = "inline-block";
@@ -175,7 +177,15 @@
 
     // === Confirm recognition and proceed ===
     function confirmLogin() {
-      window.location.href = redirectUrl;
+      fetch("/confirm-face-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ image: canvas.toDataURL("image/jpeg"), user: detectedUserName })
+      }).then(() => {
+        window.location.href = redirectUrl;
+      });
     }
 
     // === Reject recognition and show possible alternatives ===
