@@ -31,6 +31,7 @@ import numpy as np             # For image array handling
 from PIL import Image          # For handling and converting image files
 from io import BytesIO         # For reading image bytes
 import bcrypt                  # For verifying hashed passwords
+import pickle
 
 # === Import facial recognition logic ===
 from recognize_m import FaceRecognizer
@@ -121,6 +122,7 @@ def face_login():
                 name, dist = recognizer.recognize_face(embedding, recognizer.known_embeddings)
 
                 if name != "Unknown":
+                    session['temp_embedding'] = embedding.tolist() 
                     users = load_users()
                     for email, user in users.items():
                         if user.get('folder') == name:
@@ -179,6 +181,48 @@ def face_login():
         }
     })
 
+@auth_bp.route('/confirm-face-login', methods=['POST'])
+def confirm_face_login():
+    if 'user' not in session or 'temp_embedding' not in session:
+        print("[DEBUG] Session expired or no temporary embedding.")
+        return jsonify({"success": False, "message": "Session expired."}), 403
+
+    email = session['user']
+    new_embedding = np.array(session['temp_embedding'])
+    users = load_users()
+    folder = users[email]['folder']
+
+    existing_embeddings = recognizer.known_embeddings.get(folder, [])
+    should_save = False
+
+    for emb in existing_embeddings:
+        dist = np.linalg.norm(new_embedding - emb)
+        print(f"[DEBUG] Distance to existing embedding: {dist:.3f}")
+        if dist < 0.5:
+            print("[DEBUG] Embedding already known. Will not be saved.")
+            return jsonify({"success": True, "message": "Embedding already exists. No need to save."})
+        elif 0.5 < dist < 1.2:
+            should_save = True
+
+    if not should_save:
+        print("[DEBUG] Embedding outside allowed range. Not saved.")
+        return jsonify({"success": False, "message": "Embedding too different. Not saved."})
+
+    user_dir = os.path.join('..', 'embeddings', folder)
+    os.makedirs(user_dir, exist_ok=True)
+
+    existing_files = [f for f in os.listdir(user_dir) if f.endswith(".pkl")]
+    next_index = len(existing_files)
+    filename = os.path.join(user_dir, f"{folder}_{next_index:02d}.pkl")
+
+    with open(filename, "wb") as f:
+        pickle.dump(new_embedding, f)
+
+    print(f"[DEBUG] New embedding saved in{filename}")
+
+    recognizer.known_embeddings = recognizer.load_known_embeddings()
+
+    return jsonify({"success": True, "message": "New embedding saved to improve recognition accuracy."})
 
 # === Authenticated User Area ===
 @auth_bp.route('/user')
