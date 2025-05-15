@@ -103,8 +103,8 @@ class FaceRecognizer:
         best_distance = float('inf')  # Start with a very large distance
 
         # This should use `known_embeddings`, not `self.known_embeddings`
-        for name, embeddings in self.known_embeddings.items():
-            for known_emb in embeddings:
+        for name, embeddings_list in known_embeddings.items():
+            for known_emb in embeddings_list:
                 distance = np.linalg.norm(embedding - known_emb)  # Euclidean distance
                 if distance < best_distance:
                     best_distance = distance

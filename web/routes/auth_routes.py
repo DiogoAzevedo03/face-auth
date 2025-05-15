@@ -97,73 +97,80 @@ def face_login():
     Returns a JSON response indicating success or failure.
     """
     data = request.get_json()
-    
-    # Decode base64 image sent from browser
+
+    # Decode base64 image
     image_data = data['image'].split(',')[1]
     image_bytes = base64.b64decode(image_data)
     image = Image.open(BytesIO(image_bytes)).convert('RGB')
     frame = np.array(image)
 
-    # Detect faces in the image
+    # Detect faces
     faces = recognizer.detect_faces(frame)
-    if faces:
-        # Crop the first detected face from the frame
-        (x, y, w, h) = faces[0]
-        face_crop = frame[y:y+h, x:x+w]
-
-        # Generate an embedding for the detected face
-        embedding = recognizer.get_embedding(face_crop)
-
-        # Try to recognize the face using known embeddings
-        name, dist = recognizer.recognize_face(embedding, recognizer.known_embeddings)
-
-        if name != "Unknown":
-            users = load_users()
-
-            # Find the corresponding email by matching folder name
-            for email, user in users.items():
-                if user.get('folder') == name:
-                    # If match is found, create session
-                    session['user'] = email
-                    session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-                    session['role'] = user.get('role')
-                    
-                    # Calcular sugestões mesmo que tenha havido match
-                    distances = []
-                    for other_name, known_emb in recognizer.known_embeddings.items():
-                        dist = np.linalg.norm(embedding - known_emb)
-                        distances.append((other_name, dist))
-
-                    # Ordenar pelas menores distâncias
-                    distances.sort(key=lambda x: x[1])
-                    suggestions = [name for name, _ in distances[:3]]
-                    return jsonify({
-                        "success": True,
-                        "message": "User recognized successfully.",
-                        "data": {
-                            "user": name,
-                            "redirect": "/admin/dashboard" if user.get('role') == 'admin' else "/user",
-                            "suggestions": suggestions
-                        }
-                    })
-
-
-    # If no match or no face detected, suggest similar users
     suggestions = []
 
-    if 'embedding' in locals():  # Só se tiver gerado embedding
-        # Calcula distância de todos os embeddings conhecidos
-        distances = []
-        for name, known_emb in recognizer.known_embeddings.items():
-            dist = np.linalg.norm(embedding - known_emb)
-            distances.append((name, dist))
+    if faces:
+        (x, y, w, h) = faces[0]
 
-        # Ordena pelas distâncias mais pequenas (mais parecidos)
-        distances.sort(key=lambda x: x[1])
+        # Validate coordinates
+        if x >= 0 and y >= 0 and w > 0 and h > 0 and x + w <= frame.shape[1] and y + h <= frame.shape[0]:
+            face_crop = frame[y:y+h, x:x+w]
 
-        # Pega no top 3 nomes mais parecidos (se existirem)
-        suggestions = [name for name, _ in distances[:3]]
+            # Double-check validity
+            if face_crop.size > 0:
+                embedding = recognizer.get_embedding(face_crop)
+                name, dist = recognizer.recognize_face(embedding, recognizer.known_embeddings)
 
+                if name != "Unknown":
+                    users = load_users()
+                    for email, user in users.items():
+                        if user.get('folder') == name:
+                            session['user'] = email
+                            session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+                            session['role'] = user.get('role')
+
+                            # Suggest similar users
+                            all_distances = []
+                            for folder_name, embeddings_list in recognizer.known_embeddings.items():
+                                for known_emb in embeddings_list:
+                                    dist = np.linalg.norm(embedding - known_emb)
+                                    all_distances.append((folder_name, dist))
+
+                            all_distances.sort(key=lambda x: x[1])
+                            seen = set()
+                            for folder_name, _ in all_distances:
+                                if folder_name not in seen:
+                                    suggestions.append(folder_name)
+                                    seen.add(folder_name)
+                                    if len(suggestions) == 3:
+                                        break
+
+                            return jsonify({
+                                "success": True,
+                                "message": "User recognized successfully.",
+                                "data": {
+                                    "user": name,
+                                    "redirect": "/admin/dashboard" if user.get('role') == 'admin' else "/user",
+                                    "suggestions": suggestions
+                                }
+                            })
+
+                # Fallback: generate suggestions if embedding exists
+                all_distances = []
+                for folder_name, embeddings_list in recognizer.known_embeddings.items():
+                    for known_emb in embeddings_list:
+                        dist = np.linalg.norm(embedding - known_emb)
+                        all_distances.append((folder_name, dist))
+
+                all_distances.sort(key=lambda x: x[1])
+                seen = set()
+                for folder_name, _ in all_distances:
+                    if folder_name not in seen:
+                        suggestions.append(folder_name)
+                        seen.add(folder_name)
+                        if len(suggestions) == 3:
+                            break
+
+    # Return fallback response
     return jsonify({
         "success": False,
         "message": "User not recognized.",
@@ -171,6 +178,7 @@ def face_login():
             "suggestions": suggestions
         }
     })
+
 
 # === Authenticated User Area ===
 @auth_bp.route('/user')
