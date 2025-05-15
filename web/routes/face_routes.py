@@ -21,6 +21,7 @@ from datetime import datetime
 # === Custom Modules ===
 from generate_multiple_embeddings_m import EmbeddingGenerator
 from utils.user_db import load_users, save_users
+from web.routes.auth_routes import recognizer
 
 # === Data processing and security ===
 import base64
@@ -147,7 +148,13 @@ def save_embedding():
     with open(save_path, "wb") as f:
         pickle.dump(embedding, f)
 
+
     print(f"[DEBUG] Saved embedding: {save_path}")
+
+    # Update global recognizer embeddings
+    recognizer.known_embeddings = recognizer.load_known_embeddings()
+
+
     return "Saved successfully", 200
 
 
