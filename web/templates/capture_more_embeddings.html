@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Capture Additional Embeddings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+
+        .wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vh;
+            height: 100vw;
+            background-color: #f4f4f4;
+            transform-origin: top left;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        input[type=number] {
+            padding: 10px;
+            font-size: 16px;
+            width: 60px;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin-top: 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        video, canvas {
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 2px solid #ccc;
+        }
+
+        #status {
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper" id="rotateWrapper">
+    <div class="container">
+        <h2>Add More Embeddings For:</h2>
+        <p><strong>{{ folder }}</strong></p>
+
+        <form id="embeddingForm">
+            <input type="hidden" name="folder" value="{{ folder }}">
+            <label for="num_embeddings">Number of captures:</label>
+            <input type="number" name="num_embeddings" id="num_embeddings" value="5" min="1" max="100" required>
+            <br>
+            <button type="submit">Start Capture</button>
+        </form>
+
+        <div style="position: relative; display: inline-block;">
+            <video id="video" width="320" height="240" autoplay></video>
+            <canvas id="overlay" width="320" height="240" style="position: absolute; top: 0; left: 0;"></canvas>
+        </div>
+        <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+        <p id="status"></p>
+    </div>
+</div>
+
+<script>
+    function applyPortraitMode() {
+        const wrapper = document.getElementById("rotateWrapper");
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const offset = 80;
+        wrapper.style.width = height + "px";
+        wrapper.style.height = width + "px";
+        wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+    }
+    window.addEventListener("load", applyPortraitMode);
+    window.addEventListener("resize", applyPortraitMode);
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const overlay = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
+    const overlayCtx = overlay.getContext("2d");
+    const statusText = document.getElementById("status");
+    const form = document.getElementById("embeddingForm");
+
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+    });
+
+    async function saveEmbedding(image, folder) {
+        const response = await fetch("{{ url_for('face.save_embedding') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: image, folder: folder })
+        });
+        return response.ok;
+    }
+
+    form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const folder = form.elements['folder'].value;
+    const count = parseInt(form.elements['num_embeddings'].value);
+
+    let captured = 0;
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    while (captured < count) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/jpeg");
+
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlayCtx.strokeStyle = "lime";
+        overlayCtx.lineWidth = 2;
+        overlayCtx.strokeRect(60, 40, 200, 150);  // dummy box
+
+    const success = await saveEmbedding(imageData, folder);
+        if (success) {
+            captured++;
+            statusText.textContent = `Captured ${captured}/${count}`;
+            await delay(1000);
+        } else {
+            statusText.textContent = "Error capturing face. Retrying...";
+            await delay(1000);
+        }
+    }
+
+    statusText.textContent = "All embeddings captured! Returning...";
+    await delay(2000);
+    window.location.href = "{{ url_for('admin.dashboard') }}";
+};
+</script>
+</body>
+</html>
+

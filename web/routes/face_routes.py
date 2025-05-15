@@ -83,7 +83,6 @@ def create_user():
     save_users(users)
     return "User created", 200
 
-# === Save facial embedding after image capture ===
 @face_bp.route('/admin/save-embedding', methods=['POST'])
 def save_embedding():
     """
@@ -95,9 +94,8 @@ def save_embedding():
     Returns status and bounding box coordinates if applicable.
     """
     data = request.get_json()
-    folder = data['folder']       # Folder to store embedding
-    index = data['index']         # Index used in filename (e.g. folder_00.pkl)
-    draw_only = data.get('drawOnly', False)  # Preview-only mode flag
+    folder = data['folder']
+    draw_only = data.get('drawOnly', False)
 
     # Decode base64 image into NumPy array
     image_data = data['image'].split(',')[1]
@@ -110,13 +108,11 @@ def save_embedding():
     if not faces:
         return "No face detected", 400
 
-    # Take first face detected and crop it
     (x, y, w, h) = faces[0]
     face_crop = frame[y:y+h, x:x+w]
     if face_crop.size == 0:
         return "Invalid face crop", 400
 
-    # If in preview mode, just return coordinates of bounding box
     if draw_only:
         return jsonify({
             "success": True,
@@ -128,14 +124,45 @@ def save_embedding():
                 "h": int(h)
             }
         })
-    # Get face embedding from model
+
+    # Get face embedding
     embedding = embedder.get_embedding(face_crop)
 
-    # Prepare storage path and save .pkl file
+    # Create path if not exists
     path = os.path.join('..', 'embeddings', folder)
     os.makedirs(path, exist_ok=True)
-    with open(os.path.join(path, f"{folder}_{index:02d}.pkl"), "wb") as f:
+
+    # Find next available index to avoid overwriting
+    existing_files = [f for f in os.listdir(path) if f.endswith('.pkl') and f.startswith(folder + "_")]
+    indices = []
+    for fname in existing_files:
+        try:
+            number = int(fname.replace(folder + "_", "").replace(".pkl", ""))
+            indices.append(number)
+        except:
+            continue
+    next_index = max(indices) + 1 if indices else 0
+
+    save_path = os.path.join(path, f"{folder}_{next_index:02d}.pkl")
+    with open(save_path, "wb") as f:
         pickle.dump(embedding, f)
 
+    print(f"[DEBUG] Saved embedding: {save_path}")
     return "Saved successfully", 200
 
+
+from flask import request, render_template
+
+@face_bp.route('/admin/capture-more', methods=['GET'])
+def capture_more_embeddings():
+    folder = request.args.get('folder')
+    if not folder:
+        return "folder not provided", 400
+    return render_template('capture_more_embeddings.html', folder=folder)
+
+@face_bp.route('/admin/capture-more/process', methods=['POST'])
+def capture_embeddings_process():
+    folder = request.form.get('folder')
+    num_embeddings = int(request.form.get('num_embeddings', 5))
+    
+    return f"Capture {num_embeddings} embeddings for {folder}"
