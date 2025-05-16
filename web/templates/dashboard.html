@@ -137,10 +137,16 @@
                 <td>{{ email }}</td>           <!-- User's email -->
                 <td>{{ info.role }}</td>       <!-- User's role -->
                 <td>
-                    <!-- Delete user form (POST request to /admin/remove) -->
-                    <form action="{{ url_for('admin.admin_remove') }}" method="POST">
-                       <input type="hidden" name="email" value="{{ email }}">  <!-- Pass user's email -->
+                    <!-- Delete user form -->
+                    <form action="{{ url_for('admin.admin_remove') }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="email" value="{{ email }}">
                         <button type="submit" class="btn" style="background-color: #dc3545;">Remove</button>
+                    </form>
+
+                    <!-- Add Embeddings button -->
+                    <form action="{{ url_for('face.capture_more_embeddings') }}" method="GET" style="display:inline;">
+                        <input type="hidden" name="folder" value="{{ info.folder }}">
+                        <button type="submit" class="btn" style="background-color: #28a745;">Add Embeddings</button>
                     </form>
                 </td>
             </tr>
