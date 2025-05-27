@@ -14,110 +14,148 @@
  - Flask with Jinja2 for error rendering
  ============================================ -->
 
- <!DOCTYPE html>
- <html lang="en">
- <head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
          <!-- Character encoding -->
-     <meta charset="UTF-8">
+  <meta charset="UTF-8">
 
         <!-- Page title -->
-     <title>Manual Login - FaceAuth</title>
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
- 
+  <title>Manual Login - FaceAuth</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
      <!-- Embedded style adapted for portrait mode layout -->
-     <style>
-         html, body {
-             margin: 0;
-             padding: 0;
-             background: #f4f4f4;
-             overflow: hidden;
-             font-family: Arial, sans-serif;
-             width: 100vw;
-             height: 100vh;
-         }
- 
-         .wrapper {
-             position: absolute;
-             top: 0;
-             left: 0;
-             width: 100vh;
-             height: 100vw;
-             background-color: #f4f4f4;
-             transform-origin: top left;
-             display: flex;
-             justify-content: center;
-             align-items: center;
-         }
- 
-         .container {
-             background: white;
-             padding: 30px;
-             border-radius: 10px;
-             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-             width: 90%;
-             max-width: 400px;
-         }
- 
-         input {
-             display: block;
-             margin: 10px 0;
-             padding: 10px;
-             width: 100%;
-         }
- 
-         button {
-             padding: 10px 20px;
-             background: #007bff;
-             color: white;
-             border: none;
-             cursor: pointer;
-             width: 100%;
-         }
- 
-         button:hover {
-             background-color: #0056b3;
-         }
- 
-         .error {
-             color: red;
-             margin-bottom: 10px;
-         }
-     </style>
- </head>
- <body>
-     <div class="wrapper" id="rotateWrapper">
-         <div class="container">
-             <h2>Manual Login</h2>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vh;
+      height: 100vw;
+      background-color: #f4f4f4;
+      transform-origin: top left;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 400px;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 2em;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      margin: 12px 0;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 15px;
+      font-size: 18px;
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.02);
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    a.btn-secondary {
+    display: block;
+    margin-top: 15px;
+    padding: 12px;
+    text-align: center;
+    font-size: 16px;
+    background-color: #6c757d;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    a.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: scale(1.02);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrapper" id="rotateWrapper">
+    <div class="container">
+      <h2>Manual Login</h2>
 
             <!-- If an error exists (invalid credentials), display it -->
-             {% if error %}
-                 <p class="error">{{ error }}</p>
-             {% endif %}
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
 
             <!-- Login form -->
-             <form method="POST">
-                 <input type="email" name="email" placeholder="Email" required>
-                 <input type="password" name="password" placeholder="Password" required>
-                 <button type="submit">Login</button>
-             </form>
-         </div>
-     </div>
- 
+      <form method="POST">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+        </form>
+
+        <a href="{{ url_for('auth.face_login_page') }}" class="btn-secondary">
+        Return to Login with Camera
+        </a>
+
+    </div>
+  </div>
+
      <!-- JS script to apply portrait layout rotation -->
-     <script>
-         function applyPortraitMode() {
-             const wrapper = document.getElementById("rotateWrapper");
-             const width = window.innerWidth;
-             const height = window.innerHeight;
-             const offset = 80;
-             wrapper.style.width = height + "px";
-             wrapper.style.height = width + "px";
-             wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
-         }
- 
-         window.addEventListener("load", applyPortraitMode);
-         window.addEventListener("resize", applyPortraitMode);
-     </script>
- </body>
- </html>
- 
+  <script>
+    function applyPortraitMode() {
+      const wrapper = document.getElementById("rotateWrapper");
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const offset = 80;
+      wrapper.style.width = height + "px";
+      wrapper.style.height = width + "px";
+      wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+    }
+
+    window.addEventListener("load", applyPortraitMode);
+    window.addEventListener("resize", applyPortraitMode);
+  </script>
+</body>
+</html>

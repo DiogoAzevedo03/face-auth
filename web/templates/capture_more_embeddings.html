@@ -1,112 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Capture Additional Embeddings</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
-        }
+  <meta charset="UTF-8">
+  <title>Capture Additional Embeddings</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
 
-        .wrapper {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vh;
-            height: 100vw;
-            background-color: #f4f4f4;
-            transform-origin: top left;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+    .wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vh;
+      height: 100vw;
+      background-color: #f4f4f4;
+      transform-origin: top left;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-        .container {
-            width: 90%;
-            max-width: 400px;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
+    .container {
+      width: 95%;
+      max-width: 700px;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
 
-        input[type=number] {
-            padding: 10px;
-            font-size: 16px;
-            width: 60px;
-        }
+    h2 {
+      font-size: 2em;
+      margin-bottom: 10px;
+      color: #333;
+    }
 
-        button {
-            padding: 12px 20px;
-            margin-top: 20px;
-            font-size: 16px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+    input[type=number] {
+      padding: 15px;
+      font-size: 16px;
+      width: 80%;
+      margin: 10px auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
 
-        button:hover {
-            background-color: #218838;
-        }
+    button, .btn {
+      padding: 18px 32px;
+      font-size: 18px;
+      margin-top: 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
 
-        video, canvas {
-            margin-top: 20px;
-            border-radius: 8px;
-            border: 2px solid #ccc;
-        }
+    button:hover, .btn:hover {
+      background-color: #218838;
+      transform: scale(1.03);
+    }
 
-        #status {
-            font-weight: bold;
-            margin-top: 15px;
-        }
-    </style>
+    video, canvas {
+      margin-top: 25px;
+      border-radius: 12px;
+      border: 2px solid #ccc;
+      width: 100%;
+      height: 55vh;
+      max-width: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    #status {
+      margin-top: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    a.btn {
+      display: inline-block;
+      margin-top: 20px;
+      background-color: #6c757d;
+    }
+
+    a.btn:hover {
+      background-color: #5a6268;
+    }
+  </style>
 </head>
 <body>
-<div class="wrapper" id="rotateWrapper">
+  <div class="wrapper" id="rotateWrapper">
     <div class="container">
-        <h2>Add More Embeddings For:</h2>
-        <p><strong>{{ folder }}</strong></p>
+      <h2>Add More Embeddings For:</h2>
+      <p><strong>{{ folder }}</strong></p>
 
-        <form id="embeddingForm">
-            <input type="hidden" name="folder" value="{{ folder }}">
-            <label for="num_embeddings">Number of captures:</label>
-            <input type="number" name="num_embeddings" id="num_embeddings" value="5" min="1" max="100" required>
-            <br>
-            <button type="submit">Start Capture</button>
-        </form>
+      <form id="embeddingForm">
+        <input type="hidden" name="folder" value="{{ folder }}">
+        <label for="num_embeddings">Number of captures:</label>
+        <input type="number" name="num_embeddings" id="num_embeddings" value="5" min="1" max="100" required>
+        <button type="submit">Start Capture</button>
+      </form>
 
-        <div style="position: relative; display: inline-block;">
-            <video id="video" width="320" height="240" autoplay></video>
-            <canvas id="overlay" width="320" height="240" style="position: absolute; top: 0; left: 0;"></canvas>
-        </div>
-        <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+      <div style="position: relative; display: inline-block;">
+        <video id="video" width="320" height="240" autoplay></video>
+        <canvas id="overlay" width="320" height="240" style="position: absolute; top: 0; left: 0;"></canvas>
+      </div>
+      <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
-        <p id="status"></p>
+      <p id="status"></p>
+
+      <a href="{{ url_for('admin.dashboard') }}" class="btn">Back to Dashboard</a>
     </div>
-</div>
+  </div>
 
-<script>
+  <script>
     function applyPortraitMode() {
-        const wrapper = document.getElementById("rotateWrapper");
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const offset = 80;
-        wrapper.style.width = height + "px";
-        wrapper.style.height = width + "px";
-        wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
+      const wrapper = document.getElementById("rotateWrapper");
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const offset = 80;
+      wrapper.style.width = height + "px";
+      wrapper.style.height = width + "px";
+      wrapper.style.transform = `rotate(-90deg) translate(-${height}px, ${offset}px)`;
     }
+
     window.addEventListener("load", applyPortraitMode);
     window.addEventListener("resize", applyPortraitMode);
 
@@ -119,28 +147,28 @@
     const form = document.getElementById("embeddingForm");
 
     navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-        video.srcObject = stream;
+      video.srcObject = stream;
     });
 
     async function saveEmbedding(image, folder) {
-        const response = await fetch("{{ url_for('face.save_embedding') }}", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image: image, folder: folder })
-        });
-        return response.ok;
+      const response = await fetch("{{ url_for('face.save_embedding') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: image, folder: folder })
+      });
+      return response.ok;
     }
 
     form.onsubmit = async (e) => {
-    e.preventDefault();
+      e.preventDefault();
 
-    const folder = form.elements['folder'].value;
-    const count = parseInt(form.elements['num_embeddings'].value);
+      const folder = form.elements['folder'].value;
+      const count = parseInt(form.elements['num_embeddings'].value);
+      
+      let captured = 0;
+      const delay = ms => new Promise(res => setTimeout(res, ms));
 
-    let captured = 0;
-    const delay = ms => new Promise(res => setTimeout(res, ms));
-
-    while (captured < count) {
+      while (captured < count) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = canvas.toDataURL("image/jpeg");
 
@@ -149,22 +177,21 @@
         overlayCtx.lineWidth = 2;
         overlayCtx.strokeRect(60, 40, 200, 150);  // dummy box
 
-    const success = await saveEmbedding(imageData, folder);
+        const success = await saveEmbedding(imageData, folder);
         if (success) {
-            captured++;
-            statusText.textContent = `Captured ${captured}/${count}`;
-            await delay(1000);
+          captured++;
+          statusText.textContent = `Captured ${captured}/${count}`;
+          await delay(1000);
         } else {
-            statusText.textContent = "Error capturing face. Retrying...";
-            await delay(1000);
+          statusText.textContent = "Error capturing face. Retrying...";
+          await delay(1000);
         }
-    }
+      }
 
-    statusText.textContent = "All embeddings captured! Returning...";
-    await delay(2000);
-    window.location.href = "{{ url_for('admin.dashboard') }}";
-};
-</script>
+      statusText.textContent = "All embeddings captured! Returning...";
+      await delay(2000);
+      window.location.href = "{{ url_for('admin.dashboard') }}";
+    };
+  </script>
 </body>
 </html>
-

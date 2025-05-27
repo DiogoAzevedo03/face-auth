@@ -24,107 +24,175 @@
      <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
  
      <!-- Inline CSS for dashboard layout and table styling -->
-          <style>
+      <style>
         html, body {
-        margin: 0;
-        padding: 0;
-        background: #f4f4f4;
-        font-family: Arial, sans-serif;
-        overflow: hidden;
-        width: 100vw;
-        height: 100vh;
+          margin: 0;
+          padding: 0;
+          background: #f4f4f4;
+          font-family: Arial, sans-serif;
+          overflow: hidden;
+          width: 100vw;
+          height: 100vh;
         }
 
         .wrapper {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100vh;
-        height: 100vw;
-        background-color: #f4f4f4;
-        transform-origin: top left;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-        box-sizing: border-box;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100vh;
+          height: 100vw;
+          background-color: #f4f4f4;
+          transform-origin: top left;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 20px;
+          box-sizing: border-box;
         }
 
         .container {
-        width: 90%;
+          width: 95%;
+          max-width: 800px;
+          background: white;
+          padding: 30px;
+          border-radius: 12px;
+          box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+          text-align: center;
         }
 
-        h2 {
-        text-align: center;
-        margin-bottom: 30px;
+        h2, .top-bar strong {
+          font-size: 1.6em;
+          color: #333;
         }
+
         .btn {
-        padding: 12px 24px;
-        font-size: 16px;
-        border: none;
-        border-radius: 6px;
-        background-color: #007bff;        /* Primary blue */
-        color: white;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        margin-bottom: 30px;
+          padding: 20px 24px;
+          font-size: 17px;
+          border: none;
+          border-radius: 8px;
+          background-color: #28a745;
+          color: white;
+          cursor: pointer;
+          text-decoration: none;
+          margin: 5px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+          transition: transform 0.2s ease;
         }
+
+        .btn-sm {
+          padding: 10px 18px;
+          font-size: 15px;
+          border-radius: 6px;
+        }
+
         .btn:hover {
-             background-color: #0056b3;        /* Darker on hover */
-         }
-         table {
-             width: 100%;                      /* Full-width table */
-             border-collapse: collapse;        /* Remove gaps between borders */
-             margin-top: 10px;
-             background: white;
-         }
-         th, td {
-             padding: 12px;
-             border: 1px solid #ccc;           /* Light gray border for each cell */
-             text-align: left;
-         }
-         form {
-             display: inline;                  /* Keep delete button inline */
-         }
-        .logout {
-        margin-top: 40px;
-        display: block;
-        text-align: center;
+          background-color: #0056b3;
+          transform: scale(1.05);
+        }
+
+        table {
+          width: 100%;
+          max-width: 700px;
+          margin: 20px auto;
+          border-collapse: collapse;
+          background-color: #f9f9f9;
+          border-radius: 10px;
+          overflow: hidden;
+        }
+
+        th, td {
+          padding: 14px 16px;
+          border-bottom: 1px solid #ddd;
+          text-align: center;
+          font-size: 16px;
+        }
+
+        th {
+          background-color: #007bff;
+          color: white;
+        }
+
+        tr:hover {
+          background-color: #f1f1f1;
+        }
+
+        form {
+          display: inline-block;
+          margin: 0 5px;
         }
 
         .top-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 20px;
-        margin-bottom: 30px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 17px;
+          margin-bottom: 30px;
+          padding: 0 10px;
         }
-    </style>
+
+        .top-bar a {
+          color: #dc3545;
+          text-decoration: none;
+          font-weight: bold;
+        }
+
+        .top-bar a:hover {
+          text-decoration: underline;
+        }
+        .button-center {
+          display: flex;
+          justify-content: center;
+          margin: 20px 0;
+        }
+        .dashboard-title {
+          font-size: 2.2em;
+          font-weight: bold;
+          text-align: center;
+          flex: 1;
+        }
+        .user-info {
+          margin-top: 5px;
+          font-size: 16px;
+          color: #555;
+        }
+        .user-info a {
+          color: #dc3545;
+          font-weight: bold;
+          margin-left: 10px;
+          text-decoration: none;
+        }
+
+
+
+      </style>
+
+
  </head>
  <body>
     <div class="wrapper" id="rotateWrapper">
       <div class="container">
         <!-- Header bar showing the page title and logged-in admin user -->
         <div class="top-bar">
-          <span><strong>Admin Dashboard</strong></span>
-          <span>
-            {{ session['user'] }} | 
-            <a href="{{ url_for('auth.logout') }}" style="color: #dc3545;">Logout</a>
-          </span>
+          <span class="dashboard-title">Admin Dashboard</span>
+            <div class="user-info">
+              Logged in as: <strong>{{ user_folder }}</strong>
+              <a href="{{ url_for('auth.logout') }}">Logout</a>
+            </div>
+
+
         </div>
   
         <!-- Central action: Add new user button -->
-        <div style="text-align: center;">
+        <div class="button-center">
           <a href="{{ url_for('face.admin_generate') }}" class="btn">Add New User</a>
         </div>
-  
+
         <!-- Table showing all registered users -->
         <table>
           <thead>
             <tr>
                 <tr>
-                    <th>Email</th>   <!-- Email of the user -->
+                    <th>Name</th>   <!-- Email of the user -->
                     <th>Role</th>    <!-- Role: admin or normal -->
                     <th>Actions</th> <!-- Remove button -->
                 </tr>
@@ -132,22 +200,24 @@
           </thead>
           <tbody>
             <!-- Loop through all users passed from Flask -->
-            {% for email, info in users.items() %}
+            {% for folder, info in users.items() %}
             <tr>
-                <td>{{ email }}</td>           <!-- User's email -->
+                <td>{{ info.folder }}</td>           <!-- User's folder -->
                 <td>{{ info.role }}</td>       <!-- User's role -->
                 <td>
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                     <!-- Delete user form -->
-                    <form action="{{ url_for('admin.admin_remove') }}" method="POST" style="display:inline;">
-                        <input type="hidden" name="email" value="{{ email }}">
-                        <button type="submit" class="btn" style="background-color: #dc3545;">Remove</button>
+                    <form action="{{ url_for('admin.admin_remove') }}" method="POST">
+                      <input type="hidden" name="folder" value="{{ info.folder }}">
+                      <button type="submit" class="btn" style="background-color: #dc3545; width: 220px; padding: 23px 32px; font-size: 18px;">Remove</button>
                     </form>
 
                     <!-- Add Embeddings button -->
-                    <form action="{{ url_for('face.capture_more_embeddings') }}" method="GET" style="display:inline;">
-                        <input type="hidden" name="folder" value="{{ info.folder }}">
-                        <button type="submit" class="btn" style="background-color: #28a745;">Add Embeddings</button>
+                    <form action="{{ url_for('face.capture_more_embeddings') }}" method="GET">
+                      <input type="hidden" name="folder" value="{{ info.folder }}">
+                      <button type="submit" class="btn" style="background-color: #28a745; width: 220px; padding: 23px 32px; font-size: 18px;">Add Embeddings</button>
                     </form>
+                  </div>
                 </td>
             </tr>
             {% endfor %}

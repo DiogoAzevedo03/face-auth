@@ -37,9 +37,11 @@ def dashboard():
 
     # Load users from JSON database
     users = load_users()
-
+    user_email = session.get('user')
+    user_folder = users[user_email]['folder']
+    
     # Render the dashboard page, passing all user data
-    return render_template('dashboard.html', users=users)
+    return render_template("dashboard.html", users=users, user_folder=user_folder)
 
 # === Admin Logout ===
 @admin_bp.route('/admin/logout')
@@ -83,26 +85,28 @@ def admin_add():
 # === Remove Existing User ===
 @admin_bp.route('/admin/remove', methods=['POST'])
 def admin_remove():
-    # Get user email from the form
-    email = request.form['email']
+    folder = request.form.get('folder')
+    print("[DEBUG] Pedido de remoção para folder:", folder)
 
-    # Load current users
     users = load_users()
 
-    # Check if the user exists
-    if email in users:
-        # If the user has an associated embedding folder, remove it too
-        folder = users[email].get("folder")
+    user_to_delete = None
+    for email, info in users.items():
+        print(f"[DEBUG] A verificar utilizador: {email} -> {info.get('folder')}")
+        if info.get("folder") == folder:
+            user_to_delete = email
+            break
 
-        # Remove user from the list
-        users.pop(email)
+    if user_to_delete:
+        print(f"[INFO] Removendo utilizador: {user_to_delete}")
+        users.pop(user_to_delete)
         save_users(users)
 
-        # If a folder was defined and exists, delete it recursively
-        if folder:
-            folder_path = os.path.join('..', 'embeddings', folder)
-            if os.path.exists(folder_path):
-                shutil.rmtree(folder_path)
+        folder_path = os.path.join('..', 'embeddings', folder)
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+            print(f"[INFO] Pasta de embeddings {folder_path} removida")
+    else:
+        print("[WARN] Nenhum utilizador encontrado com o folder fornecido")
 
-    # Redirect back to dashboard after deletion
     return redirect(url_for('admin.dashboard'))
