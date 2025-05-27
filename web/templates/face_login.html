@@ -23,34 +23,83 @@
      <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
        <!-- Inline CSS styling for video and layout -->
-  <style>
+<style>
     html, body {
-  margin: 0;
-  padding: 0;
-  background: #f4f4f4;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-  width: 100vw;
-  height: 100vh;
-}
-.wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vh;
-  height: 100vw;
-  background-color: #f4f4f4;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform-origin: top left;
-}
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      width: 100vw;
+      height: 100vh;
+    }
 
+    .wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vh;
+      height: 100vw;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transform-origin: top left;
+    }
 
-.container {
-  text-align: center;
-}
+    .container {
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    video {
+      width: 100%;
+      height: auto;
+      max-width: 100vh;
+      object-fit: cover;
+      border-radius: 0;
+      border: none;
+    }
+
+    p#status {
+      margin-top: 20px;
+      font-size: 1.3em;
+      font-weight: bold;
+    }
+
+    button {
+      display: inline-block;
+      margin: 10px;
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    #suggestions button {
+      background-color: #6c757d;
+    }
+
+    #suggestions button:hover {
+      background-color: #5a6268;
+    }
   </style>
+
 </head>
 <body>
   <!-- Rotated wrapper for portrait layout -->
@@ -66,7 +115,7 @@
         <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
         <!-- Text for displaying current camera/login status -->
-        <p id="status">Initializing camera...</p>
+<p id="status" style="font-weight: bold;">Initializing camera...</p>
 
         <!-- Retry Recognition Button (hidden by default) -->
         <button id="retryBtn" onclick="retryRecognition()" style="display:none;">Try Again</button>
@@ -152,26 +201,28 @@
             // Check if user was recognized successfully
             if (data.success) {
                 // Successful recognition
-                detectedUserName = data.data.user;
-                statusText.textContent = `Welcome, ${data.data.user}. Please confirm to continue.`;
-                redirectUrl = data.data.redirect;
-                confirmBtn.style.display = "inline-block";
-                rejectBtn.style.display = "inline-block";
+    detectedUserName = data.data.user;
+    statusText.textContent = `Welcome, ${data.data.user}. Please confirm to continue.`;
+    statusText.style.color = "green";
+    redirectUrl = data.data.redirect;
+    confirmBtn.style.display = "inline-block";
+    rejectBtn.style.display = "inline-block";
 
-                retryBtn.style.display = "none";
+    retryBtn.style.display = "none";
 
                 // Store suggestions for later if needed
-                storedSuggestions = data.data.suggestions || [];
-                suggestionsDiv.style.display = "none";
+    storedSuggestions = data.data.suggestions || [];
+    suggestionsDiv.style.display = "none";
 
-            } else {
+} else {
                 // If not recognized
-                statusText.textContent = "User not recognized.";
-                retryBtn.style.display = "inline-block";
-                if (data.data.suggestions && data.data.suggestions.length > 0) {
-                    showSuggestions(data.data.suggestions);
-                }
-                }
+    statusText.textContent = "User not recognized.";
+    statusText.style.color = "red";
+    retryBtn.style.display = "inline-block";
+    if (data.data.suggestions && data.data.suggestions.length > 0) {
+        showSuggestions(data.data.suggestions);
+    }
+}
             });
             }
 
@@ -249,4 +300,3 @@
   </script>
 </body>
 </html>
-

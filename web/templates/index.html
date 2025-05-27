@@ -23,7 +23,7 @@
   <!-- Page title -->
   <title>FaceAuth Web</title>
 
-  <style>
+ <style>
     html, body {
       margin: 0;
       padding: 0;
@@ -49,24 +49,39 @@
 
     .container {
       text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 1.4em;
+      margin-bottom: 40px;
+      line-height: 1.5;
     }
 
     .btn {
       display: inline-block;
-      padding: 15px 30px;
-      margin-top: 20px;
-      font-size: 18px;
+      padding: 18px 36px;
+      font-size: 20px;
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       text-decoration: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
     .btn:hover {
       background-color: #0056b3;
+      transform: scale(1.05);
     }
   </style>
+
 </head>
 <body>
   <div class="wrapper" id="rotateWrapper">
