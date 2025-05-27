@@ -19,6 +19,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 # === Import custom user DB utilities ===
 from utils.user_db import load_users
 
+from utils.discord import send_discord_notification
+from datetime import datetime
+
 # === Add project root to sys.path for module accessibility ===
 import sys
 import os
@@ -172,6 +175,8 @@ def face_login():
                         if len(suggestions) == 3:
                             break
 
+    send_discord_notification("🔴 Tentativa de login falhada. Rosto não reconhecido.")
+
     # Return fallback response
     return jsonify({
         "success": False,
@@ -188,6 +193,8 @@ def confirm_face_login():
         return jsonify({"success": False, "message": "Session expired."}), 403
 
     email = session['user']
+    hora_login = datetime.now().strftime('%d/%m/%Y às %H:%M')
+    send_discord_notification(f"🟢 {email} fez login com sucesso via FaceAuth em {hora_login}")
     new_embedding = np.array(session['temp_embedding'])
     users = load_users()
     folder = users[email]['folder']
@@ -255,6 +262,8 @@ def manual_select():
             session['user'] = email
             session['login_time'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
             session['role'] = user.get('role')
+            hora_login = datetime.now().strftime('%d/%m/%Y às %H:%M')
+            send_discord_notification(f"🟢 {email} foi selecionado manualmente após sugestão em {hora_login}")
             return redirect('/admin/dashboard' if user.get('role') == 'admin' else '/user')
 
     # Se não encontrar, volta para o login facial
