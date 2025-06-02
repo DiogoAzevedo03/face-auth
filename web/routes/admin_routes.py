@@ -24,6 +24,8 @@ import bcrypt  # Secure password hashing
 import os      # File path operations
 import shutil  # Directory removal
 from datetime import datetime  # Not currently used here, but available if needed
+from utils.email_notify import send_email_notification
+
 
 # === Define a Blueprint for admin-related routes ===
 admin_bp = Blueprint('admin', __name__)
@@ -79,6 +81,24 @@ def admin_add():
     # Save updated users list to JSON
     save_users(users)
 
+    send_email_notification(
+        subject="Novo Utilizador Criado",
+        body_text=f"O utilizador {email} foi registado com o papel: {role}.",
+        body_html=f"""
+        <h2 style="color:#2c3e50;">Novo Utilizador Criado </h2>
+        <p>Foi registado um novo utilizador no sistema.</p>
+        <ul>
+        <li><strong>Email:</strong> {email}</li>
+        <li><strong>Papel:</strong> {role}</li>
+        <li><strong>Data:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</li>
+        </ul>
+        """
+    )
+
+
+    print(f"[DEBUG] A enviar email para notificar criação do utilizador: {email}")
+
+
     # Redirect back to dashboard to see new user
     return redirect(url_for('admin.dashboard'))
 
@@ -101,6 +121,20 @@ def admin_remove():
         print(f"[INFO] Removendo utilizador: {user_to_delete}")
         users.pop(user_to_delete)
         save_users(users)
+
+        send_email_notification(
+            subject="Utilizador Removido",
+            body_text=f"O utilizador {user_to_delete} foi removido do sistema.",
+            body_html=f"""
+            <h2 style="color:#e74c3c;">Utilizador Removido </h2>
+            <p>Um utilizador foi eliminado do sistema.</p>
+            <ul>
+            <li><strong>Email:</strong> {user_to_delete}</li>
+            <li><strong>Data:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</li>
+            </ul>
+            """
+        )
+
 
         folder_path = os.path.join('..', 'embeddings', folder)
         if os.path.exists(folder_path):

@@ -22,6 +22,7 @@ from datetime import datetime
 from generate_multiple_embeddings_m import EmbeddingGenerator
 from utils.user_db import load_users, save_users
 from web.routes.auth_routes import recognizer
+from utils.email_notify import send_email_notification
 
 # === Data processing and security ===
 import base64
@@ -61,6 +62,7 @@ def create_user():
     users = load_users()
     email = data['email']
     folder = data['folder']
+    role = data['role']
     folder_path = os.path.join('..', 'embeddings', folder)
 
     # Check if email already exists
@@ -82,6 +84,21 @@ def create_user():
     }
 
     save_users(users)
+    # Enviar notificação por email
+    send_email_notification(
+        subject="Novo Utilizador Criado",
+        body_text=f"O utilizador {email} foi registado com o papel: {role}.",
+        body_html=f"""
+        <h2 style="color:#2c3e50;">Novo Utilizador Criado </h2>
+        <p>Foi registado um novo utilizador no sistema.</p>
+        <ul>
+        <li><strong>Email:</strong> {email}</li>
+        <li><strong>Papel:</strong> {role}</li>
+        <li><strong>Data:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</li>
+        </ul>
+        """
+    )
+
     return "User created", 200
 
 @face_bp.route('/admin/save-embedding', methods=['POST'])
