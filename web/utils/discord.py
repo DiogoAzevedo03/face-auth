@@ -1,7 +1,17 @@
+import os
 import requests
+from dotenv import load_dotenv
+
+# Carrega variáveis do .env
+load_dotenv()
 
 def send_discord_notification(message):
-    webhook_url = 'https://discord.com/api/webhooks/1376989585292398622/despYmrYYAI_kWmbKdejMNbBlnwRMtQONYOt-PjjqFmTC5DpzS8mub5KWATdnsoNcu6v'
+    webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+
+    if not webhook_url:
+        print("⚠️ Webhook URL não definido nas variáveis de ambiente.")
+        return
+
     data = {
         "content": message
     }
