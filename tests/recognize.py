@@ -101,6 +101,9 @@ def main():
 
     while True:
         frame = picam2.capture_array()
+
+        frame = cv2.flip(frame, 1)  # Mirror the frame for natural preview
+
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Detect faces with MediaPipe
