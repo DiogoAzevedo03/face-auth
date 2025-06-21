@@ -126,7 +126,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             display: block;
-            }
+        }
 
             #overlay {
             position: absolute;
@@ -161,6 +161,8 @@
         }
         video {
             margin-bottom: 16px;
+            transform: scaleX(-1); /* Mirror preview */
+
         }
 
     </style>
@@ -264,11 +266,12 @@
              if (result.ok) {
                  const face = await result.json();
                  if (face.success && face.data && face.data.x !== undefined) {
-                     overlayCtx.strokeStyle = "lime";
-                     overlayCtx.lineWidth = 2;
-                     overlayCtx.strokeRect(face.data.x, face.data.y, face.data.w, face.data.h);
-                     return true;
-                 }
+                    overlayCtx.strokeStyle = "lime";
+                    overlayCtx.lineWidth = 2;
+                    const mirroredX = overlay.width - face.data.x - face.data.w;
+                    overlayCtx.strokeRect(mirroredX, face.data.y, face.data.w, face.data.h);
+                    return true;
+                }
              }
  
              return false;
