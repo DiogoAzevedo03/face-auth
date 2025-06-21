@@ -111,6 +111,16 @@
             transform: scale(1.02);
         }
 
+
+        button.start-btn {
+            background-color: #28a745;
+        }
+
+        button.start-btn:hover {
+            background-color: #218838;
+        }
+
+
         video, canvas {
             width: 100%;
             max-width: 340px;
@@ -151,13 +161,17 @@
         }
 
         a.btn.back {
-            background-color: #6c757d;
+            background-color: #007bff;
             text-align: center;
-            margin-top: 10px;
+            margin: 10px auto;
+            width: 400px;
+            display: inline-block;
+            padding: 19px 20px;
+            font-size: 22px;
         }
 
         a.btn.back:hover {
-            background-color: #5a6268;
+            background-color: #0056b3;
         }
         video {
             margin-bottom: 16px;
@@ -183,7 +197,7 @@
                 </select>
                 <input type="text" name="folder" placeholder="Folder name (e.g. diogo)" required>
                 <input type="number" name="count" placeholder="Number of embeddings" required>
-                <button type="submit">Start Capture</button>
+                <button type="submit" class="start-btn">Start Capture</button>
                 </form>
 
                 <div class="video-container">
