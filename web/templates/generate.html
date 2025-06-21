@@ -247,7 +247,7 @@
          }
  
          // Send image with drawOnly flag to backend for face detection only
-         async function tryDetectAndDrawFace(folder, index) {
+        async function tryDetectAndDrawFace(folder) {
              // Capture frame from video
              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
              const imageDataURL = canvas.toDataURL('image/jpeg');
@@ -256,7 +256,7 @@
              const result = await fetch("/admin/save-embedding", {
                  method: "POST",
                  headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify({ image: imageDataURL, folder, index, drawOnly: true })
+                body: JSON.stringify({ image: imageDataURL, folder, drawOnly: true })
              });
  
              // Clear overlay before drawing
@@ -268,8 +268,24 @@
                  if (face.success && face.data && face.data.x !== undefined) {
                     overlayCtx.strokeStyle = "lime";
                     overlayCtx.lineWidth = 2;
-                    const mirroredX = overlay.width - face.data.x - face.data.w;
-                    overlayCtx.strokeRect(mirroredX, face.data.y, face.data.w, face.data.h);
+                     // Scale detection box to overlay size
+                    const scaleX = overlay.width / canvas.width;
+                    const scaleY = overlay.height / canvas.height;
+                    let x = face.data.x * scaleX;
+                    let y = face.data.y * scaleY;
+                    let w = face.data.w * scaleX;
+                    let h = face.data.h * scaleY;
+
+                    // Expand box slightly for better framing
+                    const padX = w * 0.2;
+                    const padY = h * 0.2;
+                    x = Math.max(0, x - padX / 2);
+                    y = Math.max(0, y - padY / 2);
+                    w = Math.min(overlay.width - x, w + padX);
+                    h = Math.min(overlay.height - y, h + padY);
+
+                    const mirroredX = overlay.width - x - w;
+                    overlayCtx.strokeRect(mirroredX, y, w, h);
                     return true;
                 }
              }
@@ -306,7 +322,7 @@
              statusText.textContent = `Capturing ${count} embeddings...`;
  
              while (captured < count) {
-                 const faceDetected = await tryDetectAndDrawFace(folder, captured);
+                const faceDetected = await tryDetectAndDrawFace(folder);
                  if (faceDetected) {
                      const imageDataURL = canvas.toDataURL('image/jpeg');
                      const success = await detectFaceAndCapture(imageDataURL, folder, captured);

@@ -164,6 +164,34 @@
       return response.ok;
     }
 
+    // Ask backend to detect the face and return bounding box only
+    async function tryDetectAndDrawFace(folder) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageDataURL = canvas.toDataURL("image/jpeg");
+
+      const result = await fetch("/admin/save-embedding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageDataURL, folder: folder, drawOnly: true })
+      });
+
+      overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+
+      if (result.ok) {
+        const face = await result.json();
+        if (face.success && face.data && face.data.x !== undefined) {
+          overlayCtx.strokeStyle = "lime";
+          overlayCtx.lineWidth = 2;
+          const mirroredX = overlay.width - face.data.x - face.data.w;
+          overlayCtx.strokeRect(mirroredX, face.data.y, face.data.w, face.data.h);
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+
     form.onsubmit = async (e) => {
       e.preventDefault();
 
@@ -174,21 +202,17 @@
       const delay = ms => new Promise(res => setTimeout(res, ms));
 
       while (captured < count) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL("image/jpeg");
-
-        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-        overlayCtx.strokeStyle = "lime";
-        overlayCtx.lineWidth = 2;
-        overlayCtx.strokeRect(60, 40, 200, 150);  // dummy box
-
-        const success = await saveEmbedding(imageData, folder);
-        if (success) {
-          captured++;
-          statusText.textContent = `Captured ${captured}/${count}`;
-          await delay(1000);
+        const faceDetected = await tryDetectAndDrawFace(folder);
+        if (faceDetected) {
+          const imageData = canvas.toDataURL("image/jpeg");
+          const success = await saveEmbedding(imageData, folder);
+          if (success) {
+            captured++;
+            statusText.textContent = `Captured ${captured}/${count}`;
+            await delay(1000);
+          }
         } else {
-          statusText.textContent = "Error capturing face. Retrying...";
+          statusText.textContent = "No face detected. Retrying...";
           await delay(1000);
         }
       }
