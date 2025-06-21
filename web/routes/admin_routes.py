@@ -18,6 +18,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 # === Internal helper functions to read/write users from JSON file ===
 from utils.user_db import load_users, save_users
+from web.routes.auth_routes import recognizer
 
 # === Password hashing and file system handling ===
 import bcrypt  # Secure password hashing
@@ -140,6 +141,10 @@ def admin_remove():
         if os.path.exists(folder_path):
             shutil.rmtree(folder_path)
             print(f"[INFO] Pasta de embeddings {folder_path} removida")
+
+                # Reload embeddings in the global face recognizer
+        recognizer.known_embeddings = recognizer.load_known_embeddings()
+        print("[DEBUG] Embeddings recarregados após remoção do utilizador")
     else:
         print("[WARN] Nenhum utilizador encontrado com o folder fornecido")
 
